@@ -177,13 +177,19 @@ class GPS:
         if data is None or len(data) < 11:
             return  # Unexpected number of params.
         # Parse fix time.
-        self.fix_time_utc = _parse_float(data[0])
-        if self.fix_time_utc is not None:
-            # Set time to a friendly python time struct if available.
-            hours = self.fix_time_utc // 10000
-            mins = int((self.fix_time_utc // 100) % 100)
-            secs = self.fix_time_utc % 100
-            self.fix_time_utc = time.struct_time((0, 0, 0, hours, mins, secs, 0, 0, -1))
+        time_utc = _parse_float(data[0])
+        if time_utc is not None:
+            hours = time_utc // 10000
+            mins = int((time_utc // 100) % 100)
+            secs = time_utc % 100
+            # Set or update time to a friendly python time struct.
+            if self.timestamp_utc is not None:
+                self.timestamp_utc = time.struct_time((
+                    self.timestamp_utc.tm_year, self.timestamp_utc.tm_mon,
+                    self.timestamp_utc.tm_mday, hours, mins, secs, 0, 0, -1))
+            else:
+                self.timestamp_utc = time.struct_time((0, 0, 0, hours, mins,
+                                                       secs, 0, 0, -1))
         # Parse status (active/fixed or void).
         status = data[1]
         self.fix_quality = 0
