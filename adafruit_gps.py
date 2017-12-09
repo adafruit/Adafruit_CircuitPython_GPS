@@ -30,6 +30,9 @@ modules to read latitude, longitude, and more.
 """
 import time
 
+__version__ = "0.0.0-auto.0"
+__repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_GPS.git"
+
 # Internal helper parsing functions.
 # These handle input that might be none or null and return none instead of
 # throwing errors.
@@ -53,9 +56,12 @@ def _parse_float(nmea_data):
         return None
     return float(nmea_data)
 
-
+# lint warning about too many attributes disabled
+#pylint: disable-msg=R0902
 class GPS:
-
+    """ GPS parsing module.  Can parse simple NMEA data sentences from serial GPS
+    modules to read latitude, longitude, and more.
+    """
     def __init__(self, uart):
         self._uart = uart
         # Initialize null starting values for GPS attributes.
@@ -68,6 +74,7 @@ class GPS:
         self.altitude_m = None
         self.height_geoid = None
         self.velocity_knots = None
+        self.speed_knots = None
         self.track_angle_deg = None
 
     def update(self):
@@ -83,9 +90,9 @@ class GPS:
         data_type, args = sentence
         data_type = data_type.upper()
         if data_type == 'GPGGA':      # GGA, 3d location fix
-            self._parse_GPGGA(args)
+            self._parse_gpgga(args)
         elif data_type == 'GPRMC':    # RMC, minimum location info
-            self._parse_GPRMC(args)
+            self._parse_gprmc(args)
         return True
 
     def send_command(self, command, add_checksum=True):
@@ -98,8 +105,8 @@ class GPS:
         self._uart.write(command)
         if add_checksum:
             checksum = 0
-            for i in range(len(command)):
-                checksum ^= ord(command[i])
+            for char in command:
+                checksum ^= ord(char)
             self._uart.write('*')
             self._uart.write('{:02x}'.format(checksum).upper())
         self._uart.write('\r\n')
@@ -134,7 +141,7 @@ class GPS:
         data_type = sentence[1:delineator]
         return (data_type, sentence[delineator+1:])
 
-    def _parse_GPGGA(self, args):
+    def _parse_gpgga(self, args):
         # Parse the arguments (everything after data type) for NMEA GPGGA
         # 3D location fix sentence.
         data = args.split(',')
@@ -170,7 +177,7 @@ class GPS:
         self.altitude_m = _parse_float(data[8])
         self.height_geoid = _parse_float(data[10])
 
-    def _parse_GPRMC(self, args):
+    def _parse_gprmc(self, args):
         # Parse the arguments (everything after data type) for NMEA GPRMC
         # minimum location fix sentence.
         data = args.split(',')
@@ -218,8 +225,12 @@ class GPS:
                 # Replace the timestamp with an updated one.
                 # (struct_time is immutable and can't be changed in place)
                 self.timestamp_utc = time.struct_time((year, month, day,
-                    self.timestamp_utc.tm_hour, self.timestamp_utc.tm_min,
-                    self.timestamp_utc.tm_sec, 0, 0, -1))
+                                                       self.timestamp_utc.tm_hour,
+                                                       self.timestamp_utc.tm_min,
+                                                       self.timestamp_utc.tm_sec,
+                                                       0,
+                                                       0,
+                                                       -1))
             else:
                 # Time hasn't been set so create it.
                 self.timestamp_utc = time.struct_time((year, month, day, 0, 0,
