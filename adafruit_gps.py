@@ -152,7 +152,7 @@ class GPS:
         if time_utc is not None:
             hours = time_utc // 10000
             mins = int((time_utc // 100) % 100)
-            secs = time_utc % 100
+            secs = int(time_utc % 100)
             # Set or update time to a friendly python time struct.
             if self.timestamp_utc is not None:
                 self.timestamp_utc = time.struct_time((
@@ -188,7 +188,7 @@ class GPS:
         if time_utc is not None:
             hours = time_utc // 10000
             mins = int((time_utc // 100) % 100)
-            secs = time_utc % 100
+            secs = int(time_utc % 100)
             # Set or update time to a friendly python time struct.
             if self.timestamp_utc is not None:
                 self.timestamp_utc = time.struct_time((
