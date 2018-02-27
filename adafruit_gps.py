@@ -27,6 +27,20 @@ GPS parsing module.  Can parse simple NMEA data sentences from serial GPS
 modules to read latitude, longitude, and more.
 
 * Author(s): Tony DiCola
+
+Implementation Notes
+--------------------
+
+**Hardware:**
+
+* Adafruit `Ultimate GPS Breakout <https://www.adafruit.com/product/746>`_
+* Adafruit `Ultimate GPS FeatherWing <https://www.adafruit.com/product/3133>`_
+
+**Software and Dependencies:**
+
+* Adafruit CircuitPython firmware for the ESP8622 and M0-based boards:
+  https://github.com/adafruit/circuitpython/releases
+
 """
 import time
 
@@ -59,7 +73,7 @@ def _parse_float(nmea_data):
 # lint warning about too many attributes disabled
 #pylint: disable-msg=R0902
 class GPS:
-    """ GPS parsing module.  Can parse simple NMEA data sentences from serial GPS
+    """GPS parsing module.  Can parse simple NMEA data sentences from serial GPS
     modules to read latitude, longitude, and more.
     """
     def __init__(self, uart):
