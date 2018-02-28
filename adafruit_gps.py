@@ -162,10 +162,10 @@ class GPS:
         if data is None or len(data) != 14:
             return  # Unexpected number of params.
         # Parse fix time.
-        time_utc = _parse_float(data[0])
+        time_utc = int(_parse_float(data[0]))
         if time_utc is not None:
             hours = time_utc // 10000
-            mins = int((time_utc // 100) % 100)
+            mins = (time_utc // 100) % 100
             secs = time_utc % 100
             # Set or update time to a friendly python time struct.
             if self.timestamp_utc is not None:
@@ -198,10 +198,10 @@ class GPS:
         if data is None or len(data) < 11:
             return  # Unexpected number of params.
         # Parse fix time.
-        time_utc = _parse_float(data[0])
+        time_utc = int(_parse_float(data[0]))
         if time_utc is not None:
             hours = time_utc // 10000
-            mins = int((time_utc // 100) % 100)
+            mins = (time_utc // 100) % 100
             secs = time_utc % 100
             # Set or update time to a friendly python time struct.
             if self.timestamp_utc is not None:
