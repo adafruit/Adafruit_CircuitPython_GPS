@@ -195,7 +195,7 @@ class GPS:
         # Parse the arguments (everything after data type) for NMEA GPRMC
         # minimum location fix sentence.
         data = args.split(',')
-        if data is None or len(data) < 11:
+        if data is None or len(data) < 11 or data[0] is None:
             return  # Unexpected number of params.
         # Parse fix time.
         time_utc = int(_parse_float(data[0]))
