@@ -132,6 +132,8 @@ class GPS:
 
     def _parse_sentence(self):
         # Parse any NMEA sentence that is available.
+        # pylint: disable=len-as-condition
+        # This needs to be refactored when it can be tested.
         sentence = self._uart.readline()
         if sentence is None or sentence == b'' or len(sentence) < 1:
             return None
