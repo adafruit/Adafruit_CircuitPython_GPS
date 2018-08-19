@@ -2,8 +2,6 @@
 # This actually doesn't even use the GPS library and instead just reads raw
 # NMEA sentences from the GPS unit and dumps them to a file.
 
-import board
-import busio
 import serial  # pyserial is required
 
 # Path to the file to log GPS data.  By default this will be appended to
