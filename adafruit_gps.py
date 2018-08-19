@@ -76,7 +76,7 @@ class GPS:
     """GPS parsing module.  Can parse simple NMEA data sentences from serial GPS
     modules to read latitude, longitude, and more.
     """
-    def __init__(self, uart):
+    def __init__(self, uart, debug=False):
         self._uart = uart
         # Initialize null starting values for GPS attributes.
         self.timestamp_utc = None
@@ -90,6 +90,7 @@ class GPS:
         self.velocity_knots = None
         self.speed_knots = None
         self.track_angle_deg = None
+        self.debug = debug
 
     def update(self):
         """Check for updated data from the GPS module and process it
@@ -101,11 +102,13 @@ class GPS:
         sentence = self._parse_sentence()
         if sentence is None:
             return False
+        if self.debug:
+            print(sentence)
         data_type, args = sentence
-        data_type = data_type.upper()
-        if data_type == 'GPGGA':      # GGA, 3d location fix
+        data_type = data_type.upper().encode()
+        if data_type == b'GPGGA':      # GGA, 3d location fix
             self._parse_gpgga(args)
-        elif data_type == 'GPRMC':    # RMC, minimum location info
+        elif data_type == b'GPRMC':    # RMC, minimum location info
             self._parse_gprmc(args)
         return True
 
@@ -115,15 +118,15 @@ class GPS:
         Note you should NOT add the leading $ and trailing * to the command
         as they will automatically be added!
         """
-        self._uart.write('$')
+        self._uart.write(b'$')
         self._uart.write(command)
         if add_checksum:
             checksum = 0
             for char in command:
-                checksum ^= ord(char)
-            self._uart.write('*')
-            self._uart.write('{:02x}'.format(checksum).upper())
-        self._uart.write('\r\n')
+                checksum ^= char
+            self._uart.write(b'*')
+            self._uart.write('{:02x}'.format(checksum).upper().encode())
+        self._uart.write(b'\r\n')
 
     @property
     def has_fix(self):
