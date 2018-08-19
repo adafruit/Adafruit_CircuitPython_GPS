@@ -125,7 +125,7 @@ class GPS:
             for char in command:
                 checksum ^= char
             self._uart.write(b'*')
-            self._uart.write(bytes('{:02x}'.format(checksum).upper(), "ascii))
+            self._uart.write(bytes('{:02x}'.format(checksum).upper(), "ascii"))
         self._uart.write(b'\r\n')
 
     @property
