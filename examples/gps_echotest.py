@@ -11,8 +11,8 @@ import adafruit_gps
 # Define RX and TX pins for the board's serial port connected to the GPS.
 # These are the defaults you should use for the GPS FeatherWing.
 # For other boards set RX = GPS module TX, and TX = GPS module RX pins.
-#RX = board.RX
-#TX = board.TX
+RX = board.RX
+TX = board.TX
 
 # Create a serial connection for the GPS connection using default speed and
 # a slightly higher timeout (GPS modules typically update once a second).
