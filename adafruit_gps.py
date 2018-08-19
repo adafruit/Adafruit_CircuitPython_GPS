@@ -105,7 +105,7 @@ class GPS:
         if self.debug:
             print(sentence)
         data_type, args = sentence
-        data_type = data_type.upper().encode()
+        data_type = bytes(data_type.upper(), "utf-8")
         if data_type == b'GPGGA':      # GGA, 3d location fix
             self._parse_gpgga(args)
         elif data_type == b'GPRMC':    # RMC, minimum location info
@@ -125,7 +125,7 @@ class GPS:
             for char in command:
                 checksum ^= char
             self._uart.write(b'*')
-            self._uart.write(bytes('{:02x}'.format(checksum).upper(),"utf-8"))
+            self._uart.write(bytes('{:02x}'.format(checksum).upper(), "utf-8"))
         self._uart.write(b'\r\n')
 
     @property
