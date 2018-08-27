@@ -133,6 +133,11 @@ class GPS:
         """True if a current fix for location information is available."""
         return self.fix_quality is not None and self.fix_quality >= 1
 
+    @property
+    def datetime(self):
+        """Return struct_time object to feed rtc.set_time_source() function"""
+        return self.timestamp_utc
+
     def _parse_sentence(self):
         # Parse any NMEA sentence that is available.
         # pylint: disable=len-as-condition
