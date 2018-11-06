@@ -4,8 +4,8 @@
 
 import time
 import board
-import rtc
 import busio
+import rtc
 import adafruit_gps
 
 uart = busio.UART(board.TX, board.RX, baudrate=9600, timeout=3000)
