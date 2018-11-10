@@ -55,10 +55,14 @@ def _parse_degrees(nmea_data):
     # Where ddd is the degrees, mm.mmmm is the minutes.
     if nmea_data is None or len(nmea_data) < 3:
         return None
-    raw = float(nmea_data)
-    deg = raw // 100
-    minutes = raw % 100
-    return deg + minutes/60
+    # NMEA lat/long data comes in as 'ddmm.mmmm' for lat or 'dddmm.mmmm' for long
+    if nmea_data[5] == ".":
+        degrees = int(nmea_data[:3])
+        minutes = float(nmea_data[3:])
+    else:
+        degrees = int(nmea_data[:2])
+        minutes = float(nmea_data[2:])
+    return [degrees, minutes]
 
 def _parse_int(nmea_data):
     if nmea_data is None or nmea_data == '':
@@ -187,13 +191,15 @@ class GPS:
                                                        secs, 0, 0, -1))
         # Parse latitude and longitude.
         self.latitude = _parse_degrees(data[1])
-        if self.latitude is not None and \
+        if self.latitude[0] is not None and \
+           self.latitude[1] is not None and \
            data[2] is not None and data[2].lower() == 's':
-            self.latitude *= -1.0
+            self.latitude[0] *= -1.0
         self.longitude = _parse_degrees(data[3])
-        if self.longitude is not None and \
+        if self.longitude[0] is not None and \
+           self.longitude[1] is not None and \
            data[4] is not None and data[4].lower() == 'w':
-            self.longitude *= -1.0
+            self.longitude[0] *= -1.0
         # Parse out fix quality and other simple numeric values.
         self.fix_quality = _parse_int(data[5])
         self.satellites = _parse_int(data[6])
@@ -228,13 +234,15 @@ class GPS:
             self.fix_quality = 1
         # Parse latitude and longitude.
         self.latitude = _parse_degrees(data[2])
-        if self.latitude is not None and \
+        if self.latitude[0] is not None and \
+           self.latitude[1] is not None and \
            data[3] is not None and data[3].lower() == 's':
-            self.latitude *= -1.0
+            self.latitude[0] *= -1.0
         self.longitude = _parse_degrees(data[4])
-        if self.longitude is not None and \
+        if self.longitude[0] is not None and \
+           self.longitude[1] is not None and \
            data[5] is not None and data[5].lower() == 'w':
-            self.longitude *= -1.0
+            self.longitude[0] *= -1.0
         # Parse out speed and other simple numeric values.
         self.speed_knots = _parse_float(data[6])
         self.track_angle_deg = _parse_float(data[7])

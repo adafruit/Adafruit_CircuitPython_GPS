@@ -75,8 +75,8 @@ while True:
             gps.timestamp_utc.tm_hour,  # not get all data like year, day,
             gps.timestamp_utc.tm_min,   # month!
             gps.timestamp_utc.tm_sec))
-        print('Latitude: {0:.6f} degrees'.format(gps.latitude))
-        print('Longitude: {0:.6f} degrees'.format(gps.longitude))
+        print('Latitude: {} degrees {:.4f} minutes'.format(gps.latitude[0], gps.latitude[1]))
+        print('Longitude: {} degrees {:.4f} minutes'.format(gps.longitude[0], gps.longitude[1]))
         print('Fix quality: {}'.format(gps.fix_quality))
         # Some attributes beyond latitude, longitude and timestamp are optional
         # and might not be present.  Check if they're None before trying to use!
