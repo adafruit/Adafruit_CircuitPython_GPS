@@ -10,8 +10,8 @@ Introduction
     :target: https://discord.gg/nBQh6qu
     :alt: Discord
 
-.. image:: https://travis-ci.org/adafruit/Adafruit_CircuitPython_GPS.svg?branch=master
-    :target: https://travis-ci.org/adafruit/Adafruit_CircuitPython_GPS
+.. image:: https://travis-ci.com/adafruit/Adafruit_CircuitPython_GPS.svg?branch=master
+    :target: https://travis-ci.com/adafruit/Adafruit_CircuitPython_GPS
     :alt: Build Status
 
 GPS parsing module.  Can parse simple NMEA data sentences from serial GPS
