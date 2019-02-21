@@ -84,7 +84,7 @@ while True:
             print('# satellites: {}'.format(gps.satellites))
         if gps.altitude_m is not None:
             print('Altitude: {} meters'.format(gps.altitude_m))
-        if gps.track_angle_deg is not None:
+        if gps.speed_knots is not None:
             print('Speed: {} knots'.format(gps.speed_knots))
         if gps.track_angle_deg is not None:
             print('Track angle: {} degrees'.format(gps.track_angle_deg))
