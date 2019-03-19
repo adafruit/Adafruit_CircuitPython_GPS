@@ -142,6 +142,11 @@ class GPS:
         # Parse any NMEA sentence that is available.
         # pylint: disable=len-as-condition
         # This needs to be refactored when it can be tested.
+
+        # Only continue if we have at least 64 bytes in the input buffer
+        if self._uart.in_waiting < 64:
+            return None
+
         sentence = self._uart.readline()
         if sentence is None or sentence == b'' or len(sentence) < 1:
             return None
