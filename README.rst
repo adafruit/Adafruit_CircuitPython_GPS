@@ -58,7 +58,7 @@ An implementation of this can be found in examples/gps_simpletest.py
     RX = board.RX
     TX = board.TX
 
-    uart = busio.UART(TX, RX, baudrate=9600, timeout=3000)
+    uart = busio.UART(TX, RX, baudrate=9600, timeout=30)
 
     gps = adafruit_gps.GPS(uart, debug=False)
 
@@ -66,10 +66,11 @@ An implementation of this can be found in examples/gps_simpletest.py
 
     gps.send_command(b'PMTK220,1000')
 
+    last_print = time.monotonic()
     while True:
-    
+
         gps.update()
-    
+
         current = time.monotonic()
         if current - last_print >= 1.0:
             last_print = current
