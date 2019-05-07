@@ -40,7 +40,7 @@ TX = board.TX
 
 # Create a serial connection for the GPS connection using default speed and
 # a slightly higher timeout (GPS modules typically update once a second).
-uart = busio.UART(TX, RX, baudrate=9600, timeout=3000)
+uart = busio.UART(TX, RX, baudrate=9600, timeout=30)
 
 # Main loop just reads data from the GPS module and writes it back out to
 # the output file while also printing to serial output.
