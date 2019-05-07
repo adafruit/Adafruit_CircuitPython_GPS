@@ -83,6 +83,7 @@ An implementation of this can be found in examples/gps_simpletest.py
 
 
 These two lines are the lines that actually solve the issue:
+
 .. code-block:: python
 
     print('Latitude: {0:.6f} degrees'.format(gps.latitude))
