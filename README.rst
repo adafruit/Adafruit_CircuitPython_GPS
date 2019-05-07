@@ -31,7 +31,64 @@ This is easily achieved by downloading
 Usage Example
 =============
 
-See examples/simple.py for a demonstration of parsing and printing GPS location.
+See examples/gps_simpletest.py for a demonstration of parsing and printing GPS location.
+
+Important: 
+Feather boards and many other circuitpython boards will round to two decimal places like this:
+
+.. code-block:: python
+
+    >>> float('1234.5678')
+    1234.57
+
+This isn't ideal for gps data as this lowers the accuracty from 0.1m to 11m. 
+
+This can be fixed by using string formatting when the gps data is outputted.
+
+An implementation of this can be found in examples/gps_simpletest.py
+
+.. code-block:: python
+
+    import time
+    import board
+    import busio
+
+    import adafruit_gps
+
+    RX = board.RX
+    TX = board.TX
+
+    uart = busio.UART(TX, RX, baudrate=9600, timeout=30)
+
+    gps = adafruit_gps.GPS(uart, debug=False)
+
+    gps.send_command(b'PMTK314,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0')
+
+    gps.send_command(b'PMTK220,1000')
+
+    last_print = time.monotonic()
+    while True:
+
+        gps.update()
+
+        current = time.monotonic()
+        if current - last_print >= 1.0:
+            last_print = current
+            if not gps.has_fix:
+                print('Waiting for fix...')
+                continue
+            print('=' * 40)  # Print a separator line.
+            print('Latitude: {0:.6f} degrees'.format(gps.latitude))
+            print('Longitude: {0:.6f} degrees'.format(gps.longitude))
+
+
+These two lines are the lines that actually solve the issue:
+
+.. code-block:: python
+
+    print('Latitude: {0:.6f} degrees'.format(gps.latitude))
+    print('Longitude: {0:.6f} degrees'.format(gps.longitude))
+
 
 Contributing
 ============
