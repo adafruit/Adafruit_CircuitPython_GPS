@@ -41,7 +41,7 @@ Feather boards and many other circuitpython boards will round to two decimal pla
     >>> float('1234.5678')
     1234.57
 
-This isn't ideal for gps data as this lowers the accuracty from 0.1m to 11m. 
+This isn't ideal for gps data as this lowers the accuracy from 0.1m to 11m. 
 
 This can be fixed by using string formatting when the gps data is outputted.
 
