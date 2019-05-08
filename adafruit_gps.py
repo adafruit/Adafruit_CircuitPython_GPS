@@ -99,7 +99,10 @@ class GPS:
         """
         # Grab a sentence and check its data type to call the appropriate
         # parsing function.
-        sentence = self._parse_sentence()
+        try:
+            sentence = self._parse_sentence()
+        except UnicodeError:
+            return None
         if sentence is None:
             return False
         if self.debug:
