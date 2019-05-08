@@ -99,6 +99,7 @@ The first of these is GGA. GGA has more or less everything you need.
 
 Here's an explanation of GGA:
 ::
+
                                                         11
            1         2       3 4        5 6 7  8   9  10 |  12 13  14   15
            |         |       | |        | | |  |   |   | |   | |   |    |
