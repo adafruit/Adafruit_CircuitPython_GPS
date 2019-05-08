@@ -81,6 +81,15 @@ An implementation of this can be found in examples/gps_simpletest.py
             print('Latitude: {0:.6f} degrees'.format(gps.latitude))
             print('Longitude: {0:.6f} degrees'.format(gps.longitude))
 
+
+These two lines are the lines that actually solve the issue:
+
+.. code-block:: python
+
+    print('Latitude: {0:.6f} degrees'.format(gps.latitude))
+    print('Longitude: {0:.6f} degrees'.format(gps.longitude))
+
+
 Contributing
 ============
 
