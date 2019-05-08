@@ -131,6 +131,7 @@ The second of these is RMC. RMC is Reccomended Minimum Navigation Information.
 
 Here's an explanation of RMC:
 ::
+
                                                                12
            1         2 3       4 5        6 7   8   9   10   11|
            |         | |       | |        | |   |   |    |   | |
