@@ -287,6 +287,10 @@ class GPS:
         self.mess_num = _parse_int(data[1]) # Message number
         # Parse number of satellites in view
         self.satellites = _parse_int(data[2]) # Number of satellites
+        """
+        if self.satellites > 0:
+            self.has_fix = 1
+        """
 
         sats = data[3:]
         satdict = {}
