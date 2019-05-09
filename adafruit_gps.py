@@ -99,7 +99,10 @@ class GPS:
         """
         # Grab a sentence and check its data type to call the appropriate
         # parsing function.
-        sentence = self._parse_sentence()
+        try:
+            sentence = self._parse_sentence()
+        except UnicodeError:
+            return None
         if sentence is None:
             return False
         if self.debug:
@@ -145,7 +148,10 @@ class GPS:
         sentence = self._uart.readline()
         if sentence is None or sentence == b'' or len(sentence) < 1:
             return None
-        sentence = str(sentence, 'ascii').strip()
+        try:
+            sentence = str(sentence, 'ascii').strip()
+        except UnicodeError:
+            return None
         # Look for a checksum and validate it if present.
         if len(sentence) > 7 and sentence[-3] == '*':
             # Get included checksum, then calculate it and compare.
