@@ -127,7 +127,7 @@ Here's an explanation of GGA:
 14. Differential reference station ID, 0000-1023
 15. Checksum
 
-The second of these is RMC. RMC is Reccomended Minimum Navigation Information.
+The second of these is RMC. RMC is Recommended Minimum Navigation Information.
 
 Here's an explanation of RMC:
 ::
@@ -152,7 +152,7 @@ Here's an explanation of RMC:
 
 
 `Info about NMEA taken from here
-<https://www.tronico.fi/OH6NT/docs/NMEA0183.pdf/>`_.
+<https://www.tronico.fi/OH6NT/docs/NMEA0183.pdf>`_.
 
 Contributing
 ============
