@@ -109,10 +109,13 @@ class GPS:
             print(sentence)
         data_type, args = sentence
         data_type = bytes(data_type.upper(), "ascii")
+        #return sentence
         if data_type == b'GPGGA':      # GGA, 3d location fix
             self._parse_gpgga(args)
         elif data_type == b'GPRMC':    # RMC, minimum location info
             self._parse_gprmc(args)
+        elif data_type == b'GPGSV':
+            self._parse_gpgsv(args)
         return True
 
     def send_command(self, command, add_checksum=True):
@@ -171,6 +174,7 @@ class GPS:
         data_type = sentence[1:delineator]
         return (data_type, sentence[delineator+1:])
 
+    
     def _parse_gpgga(self, args):
         # Parse the arguments (everything after data type) for NMEA GPGGA
         # 3D location fix sentence.
@@ -265,3 +269,32 @@ class GPS:
                 # Time hasn't been set so create it.
                 self.timestamp_utc = time.struct_time((year, month, day, 0, 0,
                                                        0, 0, 0, -1))
+
+    def _parse_gpgsv(self, args):
+        # Parse the arguments (everything after data type) for NMEA GPGGA
+        # 3D location fix sentence.
+        data = args.split(',')
+        if data is None:
+            return  # Unexpected number of params.
+        # Parse number of messages
+        self.total_mess_num = _parse_int(data[0])
+        # Parse message number
+        self.mess_num = _parse_int(data[1])
+        # Parse number of satellites in view
+        self.satellites = _parse_int(data[2])
+        
+        sats = data[3:]
+        satdict = {}
+        for i in range(len(sats) / 4):
+            j = i*4
+
+            key = "self.gps{}".format(i)
+            satnum = self._parse_int(sats[0+j]) # Satellite number
+            satdeg = self._parse_int(sats[1+j]) # Elevation in degrees
+            satazim = self._parse_int(sats[2+j]) # Azimuth in degrees
+            satsnr = self._parse_int(sats[3+j]) # SNR (signal-to-noise ratio) in dB
+            value = (satnum, satdeg, satazim, satsnr)
+            satdict[key] = value
+
+        for k,v in satdict.items()
+            exec("%s=%s" % (k,v))
