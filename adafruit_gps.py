@@ -90,6 +90,11 @@ class GPS:
         self.velocity_knots = None
         self.speed_knots = None
         self.track_angle_deg = None
+        self.total_mess_num = None
+        self.mess_num = None
+        self.gps0 = None
+        self.gps1 = None
+        self.gps2 = None
         self.debug = debug
 
     def update(self):
@@ -277,24 +282,32 @@ class GPS:
         if data is None:
             return  # Unexpected number of params.
         # Parse number of messages
-        self.total_mess_num = _parse_int(data[0])
+        self.total_mess_num = _parse_int(data[0]) # Total number of messages
         # Parse message number
-        self.mess_num = _parse_int(data[1])
+        self.mess_num = _parse_int(data[1]) # Message number
         # Parse number of satellites in view
-        self.satellites = _parse_int(data[2])
-        
+        self.satellites = _parse_int(data[2]) # Number of satellites
+
         sats = data[3:]
         satdict = {}
         for i in range(len(sats) / 4):
             j = i*4
-
             key = "self.gps{}".format(i)
-            satnum = self._parse_int(sats[0+j]) # Satellite number
-            satdeg = self._parse_int(sats[1+j]) # Elevation in degrees
-            satazim = self._parse_int(sats[2+j]) # Azimuth in degrees
-            satsnr = self._parse_int(sats[3+j]) # SNR (signal-to-noise ratio) in dB
+            satnum = _parse_int(sats[0+j]) # Satellite number
+            satdeg = _parse_int(sats[1+j]) # Elevation in degrees
+            satazim = _parse_int(sats[2+j]) # Azimuth in degrees
+            satsnr = _parse_int(sats[3+j]) # SNR (signal-to-noise ratio) in dB
             value = (satnum, satdeg, satazim, satsnr)
             satdict[key] = value
-
-        for k,v in satdict.items()
-            exec("%s=%s" % (k,v))
+        """
+        params = {'self': self}
+        for k, v in satdict.items():
+            exec("%s=%s" % (k, v), params, params)
+        """
+        globals().update(satdict)
+        # Should be self.gps0, self.gps1, self.gps2, etc
+        # Each should be a tuple with 4 values
+        # gpsx[0] = satellite number
+        # gpsx[1] = elevation in degrees
+        # gpsx[2] = azimuth in degrees to true
+        # gpsx[3] = Signal-to-noise ratio in dB
