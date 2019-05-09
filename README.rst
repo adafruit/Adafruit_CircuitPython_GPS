@@ -103,7 +103,7 @@ Here's an explanation of GGA:
                                                         11
            1         2       3 4        5 6 7  8   9  10 |  12 13  14   15
            |         |       | |        | | |  |   |   | |   | |   |    |
-    $--GGA,hhmmss.ss,llll.ll,a,yyyyy.yy,a,x,xx,x.x,x.x,M,x.x,M,x.x,xxxx*hh
+    $--RMC,hhmmss.ss,llll.ll,a,yyyyy.yy,a,x,xx,x.x,x.x,M,x.x,M,x.x,xxxx*hh
 
 
 1. Time (UTC)
@@ -152,7 +152,7 @@ Here's an explanation of RMC:
 
 
 `Info about NMEA taken from here
-<https://www.tronico.fi/OH6NT/docs/NMEA0183.pdf/>`_.
+<https://www.tronico.fi/OH6NT/docs/NMEA0183.pdf>`_.
 
 Contributing
 ============
