@@ -10,4 +10,3 @@ bundles
 .eggs
 dist
 **/*.egg-info
-tester.py

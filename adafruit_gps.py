@@ -186,11 +186,11 @@ class GPS:
             sentence = sentence[:-3]
         # Parse out the type of sentence (first string after $ up to comma)
         # and then grab the rest as data within the sentence.
-        delineator = sentence.find(',')
-        if delineator == -1:
+        delimiter = sentence.find(',')
+        if delimiter == -1:
             return None  # Invalid sentence, no comma after data type.
-        data_type = sentence[1:delineator]
-        return (data_type, sentence[delineator+1:])
+        data_type = sentence[1:delimiter]
+        return (data_type, sentence[delimiter+1:])
 
     def _parse_gpgll(self, args):
         data = args.split(',')
