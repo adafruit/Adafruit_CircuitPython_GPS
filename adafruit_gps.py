@@ -127,14 +127,8 @@ class GPS:
             self._parse_gpgll(args)
         elif data_type == b'GPRMC':     # RMC, minimum location info
             self._parse_gprmc(args)
-        elif data_type == b'GPVTG':     # VTG, Track Made Good and Ground Speed
-            self._parse_gpvtg(args)
         elif data_type == b'GPGGA':     # GGA, 3d location fix
             self._parse_gpgga(args)
-        elif data_type == b'GPGSA':     # GSA, GPS DOP and active satellites
-            self._parse_gpgsa(args)
-        elif data_type == b'GPGSV':     # GSV, Satellites in view
-            self._parse_gpgsv(args)
         return True
 
     def send_command(self, command, add_checksum=True):
@@ -157,7 +151,7 @@ class GPS:
     def has_fix(self):
         """True if a current fix for location information is available."""
         return self.fix_quality is not None and self.fix_quality >= 1
- 
+
     @property
     def has_3d_fix(self):
         """True if a current 3d fix for location information is available"""
@@ -291,11 +285,6 @@ class GPS:
                 self.timestamp_utc = time.struct_time((year, month, day, 0, 0,
                                                        0, 0, 0, -1))
 
-    def _parse_gpvtg(self, args):
-        # Not implemented yet
-        a = args # This line is to try to get travis to pass
-        return None
-
     def _parse_gpgga(self, args):
         # Parse the arguments (everything after data type) for NMEA GPGGA
         # 3D location fix sentence.
@@ -331,13 +320,3 @@ class GPS:
         self.horizontal_dilution = _parse_float(data[7])
         self.altitude_m = _parse_float(data[8])
         self.height_geoid = _parse_float(data[10])
-
-    def _parse_gpgsa(self, args):
-        # Not implemented yet
-        a = args # This line is to try to get travis to pass
-        return None
-
-    def _parse_gpgsv(self, args):
-        # Not implemented yet
-        a = args # This line is to try to get travis to pass
-        return None
