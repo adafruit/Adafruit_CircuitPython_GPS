@@ -114,6 +114,7 @@ class GPS:
         try:
             sentence = self._parse_sentence()
         except UnicodeError:
+            print("UnicodeError")
             return None
         if sentence is None:
             return False
@@ -122,7 +123,6 @@ class GPS:
         data_type, args = sentence
         data_type = bytes(data_type.upper(), "ascii")
         #return sentence
-
         if data_type == b'GPGLL':       # GLL, Geographic Position – Latitude/Longitude
             self._parse_gpgll(args)
         elif data_type == b'GPRMC':     # RMC, minimum location info
@@ -210,7 +210,7 @@ class GPS:
 
     def _parse_gpgll(self, args):
         data = args.split(',')
-        if data is None or len(data) < 11 or data[0] is None:
+        if data is None or data[0] is None:
             return # Unexpected number of params.
 
         # Parse latitude and longitude.
@@ -222,8 +222,7 @@ class GPS:
         if self.longitude is not None and \
            data[3] is not None and data[3].lower() == 'w':
             self.longitude *= -1.0
-
-        time_utc = int(_parse_int(data[4]))
+        time_utc = int(_parse_int(float(data[4])))
         if time_utc is not None:
             hours = time_utc // 10000
             mins = (time_utc // 100) % 100
