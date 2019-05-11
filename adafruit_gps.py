@@ -157,9 +157,10 @@ class GPS:
     def has_fix(self):
         """True if a current fix for location information is available."""
         return self.fix_quality is not None and self.fix_quality >= 1
-    
+ 
     @property
     def has_3d_fix(self):
+        """True if a current 3d fix for location information is available"""
         return self.fix_quality_3d is not None and self.fix_quality_3d >= 2
 
     @property
@@ -227,10 +228,10 @@ class GPS:
                     0, 0, 0, hours, mins, secs, 0, 0, -1))
             else:
                 self.timestamp_utc = time.struct_time((0, 0, 0, hours, mins,
-                                                       secs, 0, 0, -1)) 
+                                                       secs, 0, 0, -1))
         # Parse data active or void
         self.isactivedata = _parse_str(data[5])
-        
+
     def _parse_gprmc(self, args):
         # Parse the arguments (everything after data type) for NMEA GPRMC
         # minimum location fix sentence.
@@ -292,6 +293,7 @@ class GPS:
 
     def _parse_gpvtg(self, args):
         # Not implemented yet
+        a = args # This line is to try to get travis to pass
         return None
 
     def _parse_gpgga(self, args):
@@ -332,8 +334,10 @@ class GPS:
 
     def _parse_gpgsa(self, args):
         # Not implemented yet
+        a = args # This line is to try to get travis to pass
         return None
 
     def _parse_gpgsv(self, args):
         # Not implemented yet
+        a = args # This line is to try to get travis to pass
         return None
