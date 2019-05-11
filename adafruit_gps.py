@@ -173,15 +173,19 @@ class GPS:
         # This needs to be refactored when it can be tested.
 
         # Only continue if we have at least 64 bytes in the input buffer
+        """
         if self._uart.in_waiting < 64:
             return None
+        """
 
         sentence = self._uart.readline()
         if sentence is None or sentence == b'' or len(sentence) < 1:
+            print("Sentence is none")
             return None
         try:
             sentence = str(sentence, 'ascii').strip()
         except UnicodeError:
+            print("UnicodeError")
             return None
         # Look for a checksum and validate it if present.
         if len(sentence) > 7 and sentence[-3] == '*':
@@ -191,6 +195,7 @@ class GPS:
             for i in range(1, len(sentence)-3):
                 actual ^= ord(sentence[i])
             if actual != expected:
+                print("Actual != expected")
                 return None  # Failed to validate checksum.
             # Remove checksum once validated.
             sentence = sentence[:-3]
@@ -198,6 +203,7 @@ class GPS:
         # and then grab the rest as data within the sentence.
         delineator = sentence.find(',')
         if delineator == -1:
+            print("Bad delineator")
             return None  # Invalid sentence, no comma after data type.
         data_type = sentence[1:delineator]
         return (data_type, sentence[delineator+1:])
@@ -385,9 +391,9 @@ class GPS:
         sat_tup = data[3:]
 
         satdict = {}
-        for i in range(len(sat_tup) / 4):
+        for i in range(len(sat_tup)/4):
             j = i*4
-            key = "gps{}".format(i)
+            key = "gps{}".format(i+(4*(self.mess_num-1)))
             satnum = _parse_int(sat_tup[0+j]) # Satellite number
             satdeg = _parse_int(sat_tup[1+j]) # Elevation in degrees
             satazim = _parse_int(sat_tup[2+j]) # Azimuth in degrees
@@ -400,3 +406,4 @@ class GPS:
         self.sats = {}
         for satdict in satlist:
             self.sats.update(satdict)
+        print(self.sats)
