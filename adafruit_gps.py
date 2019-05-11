@@ -173,6 +173,7 @@ class GPS:
         # This needs to be refactored when it can be tested.
 
         # Only continue if we have at least 64 bytes in the input buffer
+        # I've commented this out for now as not all sentences are 64 bytes long
         """
         if self._uart.in_waiting < 64:
             return None
