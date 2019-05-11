@@ -173,19 +173,15 @@ class GPS:
         # This needs to be refactored when it can be tested.
 
         # Only continue if we have at least 64 bytes in the input buffer
-        """
         if self._uart.in_waiting < 64:
             return None
-        """
 
         sentence = self._uart.readline()
         if sentence is None or sentence == b'' or len(sentence) < 1:
-            print("Sentence is none")
             return None
         try:
             sentence = str(sentence, 'ascii').strip()
         except UnicodeError:
-            print("UnicodeError")
             return None
         # Look for a checksum and validate it if present.
         if len(sentence) > 7 and sentence[-3] == '*':
@@ -195,7 +191,6 @@ class GPS:
             for i in range(1, len(sentence)-3):
                 actual ^= ord(sentence[i])
             if actual != expected:
-                print("Actual != expected")
                 return None  # Failed to validate checksum.
             # Remove checksum once validated.
             sentence = sentence[:-3]
@@ -203,7 +198,6 @@ class GPS:
         # and then grab the rest as data within the sentence.
         delineator = sentence.find(',')
         if delineator == -1:
-            print("Bad delineator")
             return None  # Invalid sentence, no comma after data type.
         data_type = sentence[1:delineator]
         return (data_type, sentence[delineator+1:])
@@ -230,8 +224,7 @@ class GPS:
             # Set or update time to a friendly python time struct.
             if self.timestamp_utc is not None:
                 self.timestamp_utc = time.struct_time((
-                    self.timestamp_utc.tm_year, self.timestamp_utc.tm_mon,
-                    self.timestamp_utc.tm_mday, hours, mins, secs, 0, 0, -1))
+                    0, 0, 0, hours, mins, secs, 0, 0, -1))
             else:
                 self.timestamp_utc = time.struct_time((0, 0, 0, hours, mins,
                                                        secs, 0, 0, -1)) 
@@ -298,17 +291,8 @@ class GPS:
                                                        0, 0, 0, -1))
 
     def _parse_gpvtg(self, args):
-        data = args.split(',')
-
-        # Parse true track made good (degrees)
-        self.true_track = _parse_float(data[0])
-
-        # Parse magnetic track made good
-        self.mag_track = _parse_float(data[2])
-
-        # Parse speed
-        self.speed_knots = _parse_float(data[4])
-        self.speed_kmh = _parse_float(data[6])
+        # Not implemented yet
+        return None
 
     def _parse_gpgga(self, args):
         # Parse the arguments (everything after data type) for NMEA GPGGA
@@ -347,62 +331,9 @@ class GPS:
         self.height_geoid = _parse_float(data[10])
 
     def _parse_gpgsa(self, args):
-        data = args.split(',')
-        if data is None:
-            return # Unexpected number of params
-
-        # Parse selection mode
-        self.sel_mode = _parse_str(data[0])
-        # Parse 3d fix
-        self.fix_quality_3d = _parse_int(data[1])
-        sats = list(filter(None, data[2:-4]))
-        satdict = {}
-        for i in range(len(sats)):
-            satdict["self.gps{}".format(i)] = _parse_int(sats[i])
-
-        globals().update(satdict)
-        
-        # Parse PDOP, dilution of precision
-        self.pdop = _parse_float(data[-3])
-        # Parse HDOP, horizontal dilution of precision
-        self.hdop = _parse_float(data[-2])
-        # Parse VDOP, vertical dilution of precision
-        self.vdop = _parse_float(data[-1])
+        # Not implemented yet
+        return None
 
     def _parse_gpgsv(self, args):
-        # Parse the arguments (everything after data type) for NMEA GPGGA
-        # 3D location fix sentence.
-        data = args.split(',')
-        if data is None:
-            return  # Unexpected number of params.
-
-        # Parse number of messages
-        self.total_mess_num = _parse_int(data[0]) # Total number of messages
-        # Parse message number
-        self.mess_num = _parse_int(data[1]) # Message number
-        # Parse number of satellites in view
-        self.satellites = _parse_int(data[2]) # Number of satellites
-        try:
-            satlist
-        except NameError:
-            satlist = [None] * self.total_mess_num
-
-        sat_tup = data[3:]
-
-        satdict = {}
-        for i in range(len(sat_tup)/4):
-            j = i*4
-            key = "gps{}".format(i+(4*(self.mess_num-1)))
-            satnum = _parse_int(sat_tup[0+j]) # Satellite number
-            satdeg = _parse_int(sat_tup[1+j]) # Elevation in degrees
-            satazim = _parse_int(sat_tup[2+j]) # Azimuth in degrees
-            satsnr = _parse_int(sat_tup[3+j]) # SNR (signal-to-noise ratio) in dB
-            value = (satnum, satdeg, satazim, satsnr)
-            satdict[key] = value
-
-        satlist[self.mess_num-1] = satdict
-        satlist = list(filter(None, satlist))
-        self.sats = {}
-        for satdict in satlist:
-            self.sats.update(satdict)
-        print(self.sats)
+        # Not implemented yet
+        return None
