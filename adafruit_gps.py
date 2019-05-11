@@ -94,14 +94,9 @@ class GPS:
         self.altitude_m = None
         self.height_geoid = None
         self.speed_knots = None
-        self.speed_kmh = None
         self.track_angle_deg = None
-        self.total_mess_num = None
-        self.mess_num = None
         self.sats = None
         self.isactivedata = None
-        self.true_track = None
-        self.mag_track = None
         self.debug = debug
 
     def update(self):
