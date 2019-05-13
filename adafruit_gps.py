@@ -107,6 +107,7 @@ class GPS:
         self.pdop = None
         self.hdop = None
         self.vdop = None
+        self.sats = None
         self.debug = debug
 
     def update(self):
