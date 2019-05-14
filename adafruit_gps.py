@@ -97,6 +97,7 @@ class GPS:
         self.fix_quality = None
         self.fix_quality_3d = None
         self.satellites = None
+        self.satellites_prev = None
         self.horizontal_dilution = None
         self.altitude_m = None
         self.height_geoid = None
@@ -126,7 +127,6 @@ class GPS:
         try:
             sentence = self._parse_sentence()
         except UnicodeError:
-            print("UnicodeError")
             return None
         if sentence is None:
             return False
@@ -196,12 +196,10 @@ class GPS:
 
         sentence = self._uart.readline()
         if sentence is None or sentence == b'' or len(sentence) < 1:
-            print("Sentence is none")
             return None
         try:
             sentence = str(sentence, 'ascii').strip()
         except UnicodeError:
-            print("UnicodeError")
             return None
         # Look for a checksum and validate it if present.
         if len(sentence) > 7 and sentence[-3] == '*':
@@ -211,7 +209,6 @@ class GPS:
             for i in range(1, len(sentence)-3):
                 actual ^= ord(sentence[i])
             if actual != expected:
-                print("Actual != expected")
                 return None  # Failed to validate checksum.
             # Remove checksum once validated.
             sentence = sentence[:-3]
@@ -219,7 +216,6 @@ class GPS:
         # and then grab the rest as data within the sentence.
         delimiter = sentence.find(',')
         if delimiter == -1:
-            print("Bad delimiter")
             return None  # Invalid sentence, no comma after data type.
         data_type = sentence[1:delimiter]
         return (data_type, sentence[delimiter+1:])
@@ -415,3 +411,16 @@ class GPS:
                 self.sats = {}
             for satnum in satdict:
                 self.sats[satnum] = satdict[satnum]
+            
+            try:
+                if self.satellites < self.satellites_prev:
+                    for i in self.sats:
+                        try:
+                            if int(i[-2]) >= self.satellites:
+                                del self.sats[i]
+                        except ValueError:
+                            if int(i[-1]) >= self.satellites:
+                                del self.sats[i]
+            except TypeError: 
+                pass
+            self.satellites_prev = self.satellites
