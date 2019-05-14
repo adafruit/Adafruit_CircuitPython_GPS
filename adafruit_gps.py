@@ -163,9 +163,11 @@ class GPS:
     def has_fix(self):
         """True if a current fix for location information is available."""
         return self.fix_quality is not None and self.fix_quality >= 1
-    
+
     @property
     def has_3d_fix(self):
+        """Returns true if there is a 3d fix available.
+        use has fix to determine if a 2d fix is available using the same data"""
         return self.fix_quality_3d is not None and self.fix_quality_3d >= 2
 
     @property
@@ -241,10 +243,10 @@ class GPS:
                     self.timestamp_utc.tm_mday, hours, mins, secs, 0, 0, -1))
             else:
                 self.timestamp_utc = time.struct_time((0, 0, 0, hours, mins,
-                                                       secs, 0, 0, -1)) 
+                                                       secs, 0, 0, -1))
         # Parse data active or void
         self.isactivedata = _parse_str(data[5])
-        
+
     def _parse_gprmc(self, args):
         # Parse the arguments (everything after data type) for NMEA GPRMC
         # minimum location fix sentence.
@@ -389,26 +391,22 @@ class GPS:
         self.mess_num = _parse_int(data[1]) # Message number
         # Parse number of satellites in view
         self.satellites = _parse_int(data[2]) # Number of satellites
-        try:
-            satlist
-        except NameError:
-            satlist = [None] * self.total_mess_num
 
-        sat_tup = data[3:]
+        if len(data) > 3:
+            sat_tup = data[3:]
 
-        satdict = {}
-        for i in range(len(sat_tup)/4):
-            j = i*4
-            key = "gps{}".format(i+(4*(self.mess_num-1)))
-            satnum = _parse_int(sat_tup[0+j]) # Satellite number
-            satdeg = _parse_int(sat_tup[1+j]) # Elevation in degrees
-            satazim = _parse_int(sat_tup[2+j]) # Azimuth in degrees
-            satsnr = _parse_int(sat_tup[3+j]) # SNR (signal-to-noise ratio) in dB
-            value = (satnum, satdeg, satazim, satsnr)
-            satdict[key] = value
+            satdict = {}
+            for i in range(len(sat_tup)/4):
+                j = i*4
+                key = "gps{}".format(i+(4*(self.mess_num-1)))
+                satnum = _parse_int(sat_tup[0+j]) # Satellite number
+                satdeg = _parse_int(sat_tup[1+j]) # Elevation in degrees
+                satazim = _parse_int(sat_tup[2+j]) # Azimuth in degrees
+                satsnr = _parse_int(sat_tup[3+j]) # SNR (signal-to-noise ratio) in dB
+                value = (satnum, satdeg, satazim, satsnr)
+                satdict[key] = value
 
-        satlist[self.mess_num-1] = satdict
-        satlist = list(filter(None, satlist))
-        self.sats = {}
-        for satdict in satlist:
-            self.sats.update(satdict)
+            if self.sats is None:
+                self.sats = {}
+            for satnum in satdict:
+                self.sats[satnum] = satdict[satnum]
