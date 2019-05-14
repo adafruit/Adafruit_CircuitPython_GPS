@@ -114,7 +114,6 @@ class GPS:
         self.pdop = None
         self.hdop = None
         self.vdop = None
-        self.sats = None
         self.debug = debug
 
     def update(self):
@@ -373,11 +372,9 @@ class GPS:
         # Parse 3d fix
         self.fix_quality_3d = _parse_int(data[1])
         satlist = list(filter(None, data[2:-4]))
-        satdict = {}
+        self.sat_prns = {}
         for i, sat in enumerate(satlist, 1):
-            satdict["gps{}".format(i)] = _parse_int(sat)
-
-        self.sat_prns = satdict
+            self.sat_prns["gps{}".format(i)] = _parse_int(sat)
 
         # Parse PDOP, dilution of precision
         self.pdop = _parse_float(data[-3])
