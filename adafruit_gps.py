@@ -395,7 +395,7 @@ class GPS:
 
         if len(data) < 3:
             return
-            
+
         sat_tup = data[3:]
 
         satdict = {}
