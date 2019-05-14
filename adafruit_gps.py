@@ -393,34 +393,36 @@ class GPS:
         # Parse number of satellites in view
         self.satellites = _parse_int(data[2])  # Number of satellites
 
-        if len(data) > 3:
-            sat_tup = data[3:]
-
-            satdict = {}
-            for i in range(len(sat_tup)/4):
-                j = i*4
-                key = "gps{}".format(i+(4*(self.mess_num-1)))
-                satnum = _parse_int(sat_tup[0+j])  # Satellite number
-                satdeg = _parse_int(sat_tup[1+j])  # Elevation in degrees
-                satazim = _parse_int(sat_tup[2+j])  # Azimuth in degrees
-                satsnr = _parse_int(sat_tup[3+j])  # signal-to-noise ratio in dB
-                value = (satnum, satdeg, satazim, satsnr)
-                satdict[key] = value
-
-            if self.sats is None:
-                self.sats = {}
-            for satnum in satdict:
-                self.sats[satnum] = satdict[satnum]
+        if len(data) < 3:
+            return
             
-            try:
-                if self.satellites < self.satellites_prev:
-                    for i in self.sats:
-                        try:
-                            if int(i[-2]) >= self.satellites:
-                                del self.sats[i]
-                        except ValueError:
-                            if int(i[-1]) >= self.satellites:
-                                del self.sats[i]
-            except TypeError: 
-                pass
-            self.satellites_prev = self.satellites
+        sat_tup = data[3:]
+
+        satdict = {}
+        for i in range(len(sat_tup)/4):
+            j = i*4
+            key = "gps{}".format(i+(4*(self.mess_num-1)))
+            satnum = _parse_int(sat_tup[0+j])  # Satellite number
+            satdeg = _parse_int(sat_tup[1+j])  # Elevation in degrees
+            satazim = _parse_int(sat_tup[2+j])  # Azimuth in degrees
+            satsnr = _parse_int(sat_tup[3+j])  # signal-to-noise ratio in dB
+            value = (satnum, satdeg, satazim, satsnr)
+            satdict[key] = value
+
+        if self.sats is None:
+            self.sats = {}
+        for satnum in satdict:
+            self.sats[satnum] = satdict[satnum]
+
+        try:
+            if self.satellites < self.satellites_prev:
+                for i in self.sats:
+                    try:
+                        if int(i[-2]) >= self.satellites:
+                            del self.sats[i]
+                    except ValueError:
+                        if int(i[-1]) >= self.satellites:
+                            del self.sats[i]
+        except TypeError:
+            pass
+        self.satellites_prev = self.satellites
