@@ -89,6 +89,9 @@ These two lines are the lines that actually solve the issue:
     print('Latitude: {0:.6f} degrees'.format(gps.latitude))
     print('Longitude: {0:.6f} degrees'.format(gps.longitude))
    
+
+Note: Sending multiple PMTK314 packets with gps.send_command() will not work unless there is a substantial amount of time in-between each time gps.send_command() is called. A time.sleep() of 1 second or more should fix this.
+
 About NMEA Data
 ===============
 This GPS module uses the NMEA 0183 protocol.

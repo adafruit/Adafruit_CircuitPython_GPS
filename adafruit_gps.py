@@ -50,6 +50,8 @@ __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_GPS.git"
 # Internal helper parsing functions.
 # These handle input that might be none or null and return none instead of
 # throwing errors.
+
+
 def _parse_degrees(nmea_data):
     # Parse a NMEA lat/long data pair 'dddmm.mmmm' into a pure degrees value.
     # Where ddd is the degrees, mm.mmmm is the minutes.
@@ -60,15 +62,18 @@ def _parse_degrees(nmea_data):
     minutes = raw % 100
     return deg + minutes/60
 
+
 def _parse_int(nmea_data):
     if nmea_data is None or nmea_data == '':
         return None
     return int(nmea_data)
 
+
 def _parse_float(nmea_data):
     if nmea_data is None or nmea_data == '':
         return None
     return float(nmea_data)
+
 
 def _parse_str(nmea_data):
     if nmea_data is None or nmea_data == '':
@@ -77,9 +82,11 @@ def _parse_str(nmea_data):
 
 # lint warning about too many attributes disabled
 #pylint: disable-msg=R0902
+
+
 class GPS:
-    """GPS parsing module.  Can parse simple NMEA data sentences from serial GPS
-    modules to read latitude, longitude, and more.
+    """GPS parsing module.  Can parse simple NMEA data sentences from serial
+    GPS modules to read latitude, longitude, and more.
     """
     def __init__(self, uart, debug=False):
         self._uart = uart
@@ -90,6 +97,7 @@ class GPS:
         self.fix_quality = None
         self.fix_quality_3d = None
         self.satellites = None
+        self.satellites_prev = None
         self.horizontal_dilution = None
         self.altitude_m = None
         self.height_geoid = None
@@ -97,6 +105,13 @@ class GPS:
         self.track_angle_deg = None
         self.sats = None
         self.isactivedata = None
+        self.true_track = None
+        self.mag_track = None
+        self.sat_prns = None
+        self.sel_mode = None
+        self.pdop = None
+        self.hdop = None
+        self.vdop = None
         self.debug = debug
 
     def update(self):
@@ -109,7 +124,6 @@ class GPS:
         try:
             sentence = self._parse_sentence()
         except UnicodeError:
-            print("UnicodeError")
             return None
         if sentence is None:
             return False
@@ -117,7 +131,7 @@ class GPS:
             print(sentence)
         data_type, args = sentence
         data_type = bytes(data_type.upper(), "ascii")
-        #return sentence
+        # return sentence
         if data_type == b'GPGLL':       # GLL, Geographic Position – Latitude/Longitude
             self._parse_gpgll(args)
         elif data_type == b'GPRMC':     # RMC, minimum location info
@@ -149,7 +163,9 @@ class GPS:
 
     @property
     def has_3d_fix(self):
-        """True if a current 3d fix for location information is available"""
+        """Returns true if there is a 3d fix available.
+        use has_fix to determine if a 2d fix is available,
+        passing it the same data"""
         return self.fix_quality_3d is not None and self.fix_quality_3d >= 2
 
     @property
@@ -162,8 +178,8 @@ class GPS:
         # pylint: disable=len-as-condition
         # This needs to be refactored when it can be tested.
 
-        # Only continue if we have at least 64 bytes in the input buffer
-        if self._uart.in_waiting < 64:
+        # Only continue if we have at least 32 bytes in the input buffer
+        if self._uart.in_waiting < 32:
             return None
 
         sentence = self._uart.readline()
@@ -195,7 +211,7 @@ class GPS:
     def _parse_gpgll(self, args):
         data = args.split(',')
         if data is None or data[0] is None:
-            return # Unexpected number of params.
+            return  # Unexpected number of params.
 
         # Parse latitude and longitude.
         self.latitude = _parse_degrees(data[0])
@@ -262,7 +278,7 @@ class GPS:
         if data[8] is not None and len(data[8]) == 6:
             day = int(data[8][0:2])
             month = int(data[8][2:4])
-            year = 2000 + int(data[8][4:6])  # Y2k bug, 2 digit date assumption.
+            year = 2000 + int(data[8][4:6])  # Y2k bug, 2 digit year assumption.
                                              # This is a problem with the NMEA
                                              # spec and not this code.
             if self.timestamp_utc is not None:
@@ -315,3 +331,72 @@ class GPS:
         self.horizontal_dilution = _parse_float(data[7])
         self.altitude_m = _parse_float(data[8])
         self.height_geoid = _parse_float(data[10])
+
+    def _parse_gpgsa(self, args):
+        data = args.split(',')
+        if data is None:
+            return  # Unexpected number of params
+
+        # Parse selection mode
+        self.sel_mode = _parse_str(data[0])
+        # Parse 3d fix
+        self.fix_quality_3d = _parse_int(data[1])
+        satlist = list(filter(None, data[2:-4]))
+        self.sat_prns = {}
+        for i, sat in enumerate(satlist, 1):
+            self.sat_prns["gps{}".format(i)] = _parse_int(sat)
+
+        # Parse PDOP, dilution of precision
+        self.pdop = _parse_float(data[-3])
+        # Parse HDOP, horizontal dilution of precision
+        self.hdop = _parse_float(data[-2])
+        # Parse VDOP, vertical dilution of precision
+        self.vdop = _parse_float(data[-1])
+
+    def _parse_gpgsv(self, args):
+        # Parse the arguments (everything after data type) for NMEA GPGGA
+        # 3D location fix sentence.
+        data = args.split(',')
+        if data is None:
+            return  # Unexpected number of params.
+
+        # Parse number of messages
+        self.total_mess_num = _parse_int(data[0])  # Total number of messages
+        # Parse message number
+        self.mess_num = _parse_int(data[1])  # Message number
+        # Parse number of satellites in view
+        self.satellites = _parse_int(data[2])  # Number of satellites
+
+        if len(data) < 3:
+            return
+
+        sat_tup = data[3:]
+
+        satdict = {}
+        for i in range(len(sat_tup)/4):
+            j = i*4
+            key = "gps{}".format(i+(4*(self.mess_num-1)))
+            satnum = _parse_int(sat_tup[0+j])  # Satellite number
+            satdeg = _parse_int(sat_tup[1+j])  # Elevation in degrees
+            satazim = _parse_int(sat_tup[2+j])  # Azimuth in degrees
+            satsnr = _parse_int(sat_tup[3+j])  # signal-to-noise ratio in dB
+            value = (satnum, satdeg, satazim, satsnr)
+            satdict[key] = value
+
+        if self.sats is None:
+            self.sats = {}
+        for satnum in satdict:
+            self.sats[satnum] = satdict[satnum]
+
+        try:
+            if self.satellites < self.satellites_prev:
+                for i in self.sats:
+                    try:
+                        if int(i[-2]) >= self.satellites:
+                            del self.sats[i]
+                    except ValueError:
+                        if int(i[-1]) >= self.satellites:
+                            del self.sats[i]
+        except TypeError:
+            pass
+        self.satellites_prev = self.satellites
