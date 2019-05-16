@@ -192,7 +192,6 @@ class GPS:
             return None
 
         sentence = self._uart.readline()
-        print(len(sentence))
         if sentence is None or sentence == b'' or len(sentence) < 1:
             return None
         try:
