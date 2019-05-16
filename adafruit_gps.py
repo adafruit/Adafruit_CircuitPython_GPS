@@ -102,10 +102,7 @@ class GPS:
         self.altitude_m = None
         self.height_geoid = None
         self.speed_knots = None
-        self.speed_kmh = None
         self.track_angle_deg = None
-        self.total_mess_num = None
-        self.mess_num = None
         self.sats = None
         self.isactivedata = None
         self.true_track = None
@@ -139,14 +136,8 @@ class GPS:
             self._parse_gpgll(args)
         elif data_type == b'GPRMC':     # RMC, minimum location info
             self._parse_gprmc(args)
-        elif data_type == b'GPVTG':     # VTG, Track Made Good and Ground Speed
-            self._parse_gpvtg(args)
         elif data_type == b'GPGGA':     # GGA, 3d location fix
             self._parse_gpgga(args)
-        elif data_type == b'GPGSA':     # GSA, GPS DOP and active satellites
-            self._parse_gpgsa(args)
-        elif data_type == b'GPGSV':     # GSV, Satellites in view
-            self._parse_gpgsv(args)
         return True
 
     def send_command(self, command, add_checksum=True):
@@ -239,8 +230,7 @@ class GPS:
             # Set or update time to a friendly python time struct.
             if self.timestamp_utc is not None:
                 self.timestamp_utc = time.struct_time((
-                    self.timestamp_utc.tm_year, self.timestamp_utc.tm_mon,
-                    self.timestamp_utc.tm_mday, hours, mins, secs, 0, 0, -1))
+                    0, 0, 0, hours, mins, secs, 0, 0, -1))
             else:
                 self.timestamp_utc = time.struct_time((0, 0, 0, hours, mins,
                                                        secs, 0, 0, -1))
@@ -305,19 +295,6 @@ class GPS:
                 # Time hasn't been set so create it.
                 self.timestamp_utc = time.struct_time((year, month, day, 0, 0,
                                                        0, 0, 0, -1))
-
-    def _parse_gpvtg(self, args):
-        data = args.split(',')
-
-        # Parse true track made good (degrees)
-        self.true_track = _parse_float(data[0])
-
-        # Parse magnetic track made good
-        self.mag_track = _parse_float(data[2])
-
-        # Parse speed
-        self.speed_knots = _parse_float(data[4])
-        self.speed_kmh = _parse_float(data[6])
 
     def _parse_gpgga(self, args):
         # Parse the arguments (everything after data type) for NMEA GPGGA
