@@ -112,6 +112,8 @@ class GPS:
         self.pdop = None
         self.hdop = None
         self.vdop = None
+        self.total_mess_num = None
+        self.mess_num = None
         self.debug = debug
 
     def update(self):
