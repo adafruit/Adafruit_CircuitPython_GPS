@@ -115,6 +115,7 @@ class GPS:
         self.total_mess_num = None
         self.mess_num = None
         self.debug = debug
+        self.sentence = None
 
     def update(self):
         """Check for updated data from the GPS module and process it
@@ -200,6 +201,7 @@ class GPS:
                 actual ^= ord(sentence[i])
             if actual != expected:
                 return None  # Failed to validate checksum.
+            self.sentence = sentence
             # Remove checksum once validated.
             sentence = sentence[:-3]
         # Parse out the type of sentence (first string after $ up to comma)
