@@ -211,6 +211,8 @@ class GPS:
             self.raw_sentence = sentence
 
             return sentence
+        # At this point we don't have a valid sentence
+        return None
 
     def _parse_sentence(self):
         sentence = self._read_sentence()
