@@ -114,8 +114,8 @@ class GPS:
         self.vdop = None
         self.total_mess_num = None
         self.mess_num = None
+        self._raw_sentence = None
         self.debug = debug
-        self.raw_sentence = None
 
     def update(self):
         """Check for updated data from the GPS module and process it
@@ -177,9 +177,9 @@ class GPS:
         return self.timestamp_utc
 
     @property
-    def raw_sentence(self):
+    def nmea_sentence(self):
         """Return raw_sentence which is the raw NMEA sentence read from the GPS"""
-        return self.raw_sentence
+        return self._raw_sentence
 
     def _read_sentence(self):
         # Parse any NMEA sentence that is available.
@@ -208,7 +208,7 @@ class GPS:
                 return None  # Failed to validate checksum.
 
             # copy the raw sentence
-            self.raw_sentence = sentence
+            raw_sentence = sentence
 
             return sentence
         # At this point we don't have a valid sentence
