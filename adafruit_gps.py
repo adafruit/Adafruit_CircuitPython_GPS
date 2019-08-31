@@ -114,6 +114,7 @@ class GPS:
         self.vdop = None
         self.total_mess_num = None
         self.mess_num = None
+        self._raw_sentence = None
         self.debug = debug
 
     def update(self):
@@ -175,7 +176,12 @@ class GPS:
         """Return struct_time object to feed rtc.set_time_source() function"""
         return self.timestamp_utc
 
-    def _parse_sentence(self):
+    @property
+    def nmea_sentence(self):
+        """Return raw_sentence which is the raw NMEA sentence read from the GPS"""
+        return self._raw_sentence
+
+    def _read_sentence(self):
         # Parse any NMEA sentence that is available.
         # pylint: disable=len-as-condition
         # This needs to be refactored when it can be tested.
@@ -200,8 +206,23 @@ class GPS:
                 actual ^= ord(sentence[i])
             if actual != expected:
                 return None  # Failed to validate checksum.
-            # Remove checksum once validated.
-            sentence = sentence[:-3]
+
+            # copy the raw sentence
+            _raw_sentence = sentence
+
+            return sentence
+        # At this point we don't have a valid sentence
+        return None
+
+    def _parse_sentence(self):
+        sentence = self._read_sentence()
+
+        # sentence is a valid NMEA with a valid checksum
+        if sentence is None:
+            return None
+
+        # Remove checksum once validated.
+        sentence = sentence[:-3]
         # Parse out the type of sentence (first string after $ up to comma)
         # and then grab the rest as data within the sentence.
         delimiter = sentence.find(',')
