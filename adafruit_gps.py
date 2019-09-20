@@ -208,7 +208,7 @@ class GPS:
                 return None  # Failed to validate checksum.
 
             # copy the raw sentence
-            _raw_sentence = sentence
+            self._raw_sentence = sentence
 
             return sentence
         # At this point we don't have a valid sentence
