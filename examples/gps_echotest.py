@@ -17,8 +17,12 @@ uart = busio.UART(board.TX, board.RX, baudrate=9600, timeout=30)
 #import serial
 #uart = serial.Serial("/dev/ttyUSB0", baudrate=9600, timeout=3000)
 
+# If using I2C, we'll create an I2C interface to talk to using default pins
+#i2c = busio.I2C(board.SCL, board.SDA)
+
 # Create a GPS module instance.
-gps = adafruit_gps.GPS(uart)
+gps = adafruit_gps.GPS(uart)     # Use UART/pyserial
+#gps = adafruit_gps.GPS_I2C(i2c)  # Use I2C interface
 
 # Initialize the GPS module by changing what data it sends and at what rate.
 # These are NMEA extensions for PMTK_314_SET_NMEA_OUTPUT and
