@@ -43,6 +43,7 @@ Implementation Notes
 
 """
 import time
+from micropython import const
 
 __version__ = "0.0.0-auto.0"
 __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_GPS.git"
@@ -436,6 +437,9 @@ class GPS:
         self.satellites_prev = self.satellites
 
 class GPS_I2C(GPS):
+    """I2C GPS parsing module.  Can parse simple NMEA data sentences from
+    an I2C-capable GPS module to read latitude, longitude, and more.
+    """
     def __init__(self, i2c_bus, address=_GPSI2C_DEFAULT_ADDRESS, debug=False):
         import adafruit_bus_device.i2c_device as i2c_device
         super().__init__(None, debug) # init the parent with no UART
