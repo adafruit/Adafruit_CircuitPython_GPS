@@ -91,7 +91,6 @@ class GPS:
     """
     def __init__(self, uart, debug=False):
         self._uart = uart
-        
         # Initialize null starting values for GPS attributes.
         self.timestamp_utc = None
         self.latitude = None
@@ -438,27 +437,26 @@ class GPS:
 
 class GPS_I2C(GPS):
     def __init__(self, i2c_bus, address=_GPSI2C_DEFAULT_ADDRESS, debug=False):
-        super().__init__(None, debug) # init the parent with no UART
-
         import adafruit_bus_device.i2c_device as i2c_device
+        super().__init__(None, debug) # init the parent with no UART
         self._i2c = i2c_device.I2CDevice(i2c_bus, address)
         self._lastbyte = None
         self._charbuff = bytearray(1)
-        
+
     def read(self, num_bytes=1):
         """Read up to num_bytes of data from the GPS directly, without parsing.
         Returns a bytearray with up to num_bytes or None if nothing was read"""
         result = []
-        for i in range(num_bytes):
+        for _ in range(num_bytes):
             with self._i2c as i2c:
                 # we read one byte at a time, verify it isnt part of a string of
                 # 'stuffed' \n's and then append to our result array for byteification
                 i2c.readinto(self._charbuff)
-                c = self._charbuff[0]
-                if (c == ord('\n')) and (self._lastbyte != ord('\r')):
+                char = self._charbuff[0]
+                if (char == ord('\n')) and (self._lastbyte != ord('\r')):
                     continue # skip duplicate \n's!
-                result.append(c)
-                self._lastbyte = c  # keep track of the last character approved
+                result.append(char)
+                self._lastbyte = char  # keep track of the last character approved
         return bytearray(result)
 
     def write(self, bytestr):
@@ -466,4 +464,3 @@ class GPS_I2C(GPS):
         or checksums"""
         with self._i2c as i2c:
             i2c.write(bytestr)
- 
