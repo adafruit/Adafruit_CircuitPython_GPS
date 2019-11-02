@@ -1,6 +1,6 @@
 # Simple GPS module demonstration.
 # Will print NMEA sentences received from the GPS, great for testing connection
-# Uses the GPS only to send some commands, then reads directly from UART
+# Uses the GPS to send some commands, then reads directly from the GPS
 import time
 import board
 import busio
@@ -52,7 +52,7 @@ gps.send_command(b'PMTK220,1000')
 # Main loop runs forever printing data as it comes in
 timestamp = time.monotonic()
 while True:
-    data = uart.read(32)  # read up to 32 bytes
+    data = gps.read(32)  # read up to 32 bytes
     # print(data)  # this is a bytearray type
 
     if data is not None:

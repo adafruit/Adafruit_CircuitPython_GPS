@@ -181,6 +181,11 @@ class GPS:
         """Return raw_sentence which is the raw NMEA sentence read from the GPS"""
         return self._raw_sentence
 
+    def read(self, num_bytes):
+        """Read up to num_bytes of data from the GPS directly, without parsing.
+        Returns a bytearray with up to num_bytes or None if nothing was read"""
+        return self._uart.read(num_bytes)
+
     def _read_sentence(self):
         # Parse any NMEA sentence that is available.
         # pylint: disable=len-as-condition
