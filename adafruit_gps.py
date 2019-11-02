@@ -47,11 +47,12 @@ import time
 __version__ = "0.0.0-auto.0"
 __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_GPS.git"
 
+
+_GPSI2C_DEFAULT_ADDRESS = const(0x10)
+
 # Internal helper parsing functions.
 # These handle input that might be none or null and return none instead of
 # throwing errors.
-
-
 def _parse_degrees(nmea_data):
     # Parse a NMEA lat/long data pair 'dddmm.mmmm' into a pure degrees value.
     # Where ddd is the degrees, mm.mmmm is the minutes.
@@ -90,6 +91,7 @@ class GPS:
     """
     def __init__(self, uart, debug=False):
         self._uart = uart
+        
         # Initialize null starting values for GPS attributes.
         self.timestamp_utc = None
         self.latitude = None
@@ -149,15 +151,15 @@ class GPS:
         Note you should NOT add the leading $ and trailing * to the command
         as they will automatically be added!
         """
-        self._uart.write(b'$')
-        self._uart.write(command)
+        self.write(b'$')
+        self.write(command)
         if add_checksum:
             checksum = 0
             for char in command:
                 checksum ^= char
-            self._uart.write(b'*')
-            self._uart.write(bytes('{:02x}'.format(checksum).upper(), "ascii"))
-        self._uart.write(b'\r\n')
+            self.write(b'*')
+            self.write(bytes('{:02x}'.format(checksum).upper(), "ascii"))
+        self.write(b'\r\n')
 
     @property
     def has_fix(self):
@@ -185,6 +187,11 @@ class GPS:
         """Read up to num_bytes of data from the GPS directly, without parsing.
         Returns a bytearray with up to num_bytes or None if nothing was read"""
         return self._uart.read(num_bytes)
+
+    def write(self, bytestr):
+        """Write a bytestring data to the GPS directly, without parsing
+        or checksums"""
+        return self._uart.write(bytestr)
 
     def _read_sentence(self):
         # Parse any NMEA sentence that is available.
@@ -428,3 +435,35 @@ class GPS:
         except TypeError:
             pass
         self.satellites_prev = self.satellites
+
+class GPS_I2C(GPS):
+    def __init__(self, i2c_bus, address=_GPSI2C_DEFAULT_ADDRESS, debug=False):
+        super().__init__(None, debug) # init the parent with no UART
+
+        import adafruit_bus_device.i2c_device as i2c_device
+        self._i2c = i2c_device.I2CDevice(i2c_bus, address)
+        self._lastbyte = None
+        self._charbuff = bytearray(1)
+        
+    def read(self, num_bytes=1):
+        """Read up to num_bytes of data from the GPS directly, without parsing.
+        Returns a bytearray with up to num_bytes or None if nothing was read"""
+        result = []
+        for i in range(num_bytes):
+            with self._i2c as i2c:
+                # we read one byte at a time, verify it isnt part of a string of
+                # 'stuffed' \n's and then append to our result array for byteification
+                i2c.readinto(self._charbuff)
+                c = self._charbuff[0]
+                if (c == ord('\n')) and (self._lastbyte != ord('\r')):
+                    continue # skip duplicate \n's!
+                result.append(c)
+                self._lastbyte = c  # keep track of the last character approved
+        return bytearray(result)
+
+    def write(self, bytestr):
+        """Write a bytestring data to the GPS directly, without parsing
+        or checksums"""
+        with self._i2c as i2c:
+            i2c.write(bytestr)
+ 
