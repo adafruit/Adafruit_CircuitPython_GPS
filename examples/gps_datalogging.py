@@ -22,12 +22,6 @@ LOG_FILE = '/gps.txt'  # Example for writing to internal path /gps.txt
 # like to erase the file and start clean each time use the value 'wb' instead.
 LOG_MODE = 'ab'
 
-# Define RX and TX pins for the board's serial port connected to the GPS.
-# These are the defaults you should use for the GPS FeatherWing.
-# For other boards set RX = GPS module TX, and TX = GPS module RX pins.
-RX = board.RX
-TX = board.TX
-
 # If writing to SD card customize and uncomment these lines to import the
 # necessary library and initialize the SD card:
 #SD_CS_PIN = board.SD_CS  # CS for SD card (SD_CS is for Feather Adalogger)
@@ -40,7 +34,9 @@ TX = board.TX
 
 # Create a serial connection for the GPS connection using default speed and
 # a slightly higher timeout (GPS modules typically update once a second).
-uart = busio.UART(TX, RX, baudrate=9600, timeout=30)
+# These are the defaults you should use for the GPS FeatherWing.
+# For other boards set RX = GPS module TX, and TX = GPS module RX pins.
+uart = busio.UART(board.TX, board.RX, baudrate=9600, timeout=30)
 
 # Main loop just reads data from the GPS module and writes it back out to
 # the output file while also printing to serial output.
