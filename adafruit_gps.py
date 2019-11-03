@@ -141,7 +141,7 @@ class GPS:
             self._parse_gpgll(args)
         elif data_type in (b'GPRMC', b'GNRMC'):     # RMC, minimum location info
             self._parse_gprmc(args)
-        elif data_type in (b'GPGGA' b'GNGGA'):     # GGA, 3d location fix
+        elif data_type in (b'GPGGA', b'GNGGA'):     # GGA, 3d location fix
             self._parse_gpgga(args)
         return True
 
