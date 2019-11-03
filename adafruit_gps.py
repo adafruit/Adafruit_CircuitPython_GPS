@@ -199,7 +199,7 @@ class GPS:
         return self._uart.in_waiting
 
     def readline(self):
-        """Returns a \n terminated bytearray, must have timeout set for
+        """Returns a newline terminated bytearray, must have timeout set for
         the underlying UART or this will block forever!"""
         return self._uart.readline()
 
@@ -467,7 +467,7 @@ class GPS_I2C(GPS):
         for _ in range(num_bytes):
             with self._i2c as i2c:
                 # we read one byte at a time, verify it isnt part of a string of
-                # 'stuffed' \n's and then append to our result array for byteification
+                # 'stuffed' newlines and then append to our result array for byteification
                 i2c.readinto(self._charbuff)
                 char = self._charbuff[0]
                 if (char == ord('\n')) and (self._lastbyte != ord('\r')):
@@ -489,7 +489,7 @@ class GPS_I2C(GPS):
         return 32
 
     def readline(self):
-        """Returns a \n terminated bytearray, must have timeout set for
+        """Returns a newline terminated bytearray, must have timeout set for
         the underlying UART or this will block forever!"""
         timeout = time.monotonic() + self._timeout
         while timeout > time.monotonic():
