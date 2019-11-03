@@ -1,6 +1,6 @@
 # Simple GPS datalogging demonstration.
-# This actually doesn't even use the GPS library and instead just reads raw
-# NMEA sentences from the GPS unit and dumps them to a file on an SD card
+# This example uses the GPS library and to read raw NMEA sentences 
+# over I2C or UART from the GPS unit and dumps them to a file on an SD card
 # (recommended) or internal storage (be careful as only a few kilobytes to
 # megabytes are available).  Before writing to internal storage you MUST
 # carefully follow the steps in this guide to enable writes to the internal
@@ -8,14 +8,13 @@
 #  https://learn.adafruit.com/adafruit-ultimate-gps-featherwing/circuitpython-library
 import board
 import busio
-
+import adafruit_gps
 
 # Path to the file to log GPS data.  By default this will be appended to
 # which means new lines are added at the end and all old data is kept.
 # Change this path to point at internal storage (like '/gps.txt') or SD
 # card mounted storage ('/sd/gps.txt') as desired.
 LOG_FILE = '/gps.txt'  # Example for writing to internal path /gps.txt
-#LOG_FILE = '/sd/gps.txt'     # Example for writing to SD card path /sd/gps.txt
 
 # File more for opening the log file.  Mode 'ab' means append or add new lines
 # to the end of the file rather than erasing it and starting over.  If you'd
@@ -24,25 +23,39 @@ LOG_MODE = 'ab'
 
 # If writing to SD card customize and uncomment these lines to import the
 # necessary library and initialize the SD card:
-#SD_CS_PIN = board.SD_CS  # CS for SD card (SD_CS is for Feather Adalogger)
-#import adafruit_sdcard
-#spi = busio.SPI(board.SCK, MOSI=board.MOSI, MISO=board.MISO)
-#sd_cs = digitalio.DigitalInOut(SD_CS_PIN)
-#sdcard = adafruit_sdcard.SDCard(spi, sd_cs)
-#vfs = storage.VfsFat(sdcard)
-#storage.mount(vfs, '/sd')  # Mount SD card under '/sd' path in filesystem.
+"""
+import adafruit_sdcard
+import digitalio
+import storage
+
+SD_CS_PIN = board.D10  # CS for SD card using Adalogger Featherwing
+spi = busio.SPI(board.SCK, MOSI=board.MOSI, MISO=board.MISO)
+sd_cs = digitalio.DigitalInOut(SD_CS_PIN)
+sdcard = adafruit_sdcard.SDCard(spi, sd_cs)
+vfs = storage.VfsFat(sdcard)
+storage.mount(vfs, '/sd')    # Mount SD card under '/sd' path in filesystem.
+LOG_FILE = '/sd/gps.txt'     # Example for writing to SD card path /sd/gps.txt
+"""
 
 # Create a serial connection for the GPS connection using default speed and
 # a slightly higher timeout (GPS modules typically update once a second).
 # These are the defaults you should use for the GPS FeatherWing.
 # For other boards set RX = GPS module TX, and TX = GPS module RX pins.
 uart = busio.UART(board.TX, board.RX, baudrate=9600, timeout=10)
+# If using I2C, we'll create an I2C interface to talk to using default pins
+#i2c = busio.I2C(board.SCL, board.SDA)
+
+# Create a GPS module instance.
+gps = adafruit_gps.GPS(uart)     # Use UART/pyserial
+#gps = adafruit_gps.GPS_I2C(i2c)  # Use I2C interface
 
 # Main loop just reads data from the GPS module and writes it back out to
 # the output file while also printing to serial output.
 with open(LOG_FILE, LOG_MODE) as outfile:
     while True:
-        sentence = uart.readline()
+        sentence = gps.readline()
+        if not sentence:
+            continue
         print(str(sentence, 'ascii').strip())
         outfile.write(sentence)
         outfile.flush()
