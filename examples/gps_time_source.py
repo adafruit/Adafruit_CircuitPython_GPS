@@ -52,7 +52,7 @@ while True:
 
         #Time & date from time.localtime() function
         local_time = time.localtime()
-        
+
         print("Local time: {:02}/{:02}/{} {:02}:{:02}:{:02}".format(
             local_time.tm_mon,
             local_time.tm_mday,
@@ -60,4 +60,3 @@ while True:
             local_time.tm_hour,
             local_time.tm_min,
             local_time.tm_sec))
-

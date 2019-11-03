@@ -1,5 +1,5 @@
 # Simple GPS datalogging demonstration.
-# This example uses the GPS library and to read raw NMEA sentences 
+# This example uses the GPS library and to read raw NMEA sentences
 # over I2C or UART from the GPS unit and dumps them to a file on an SD card
 # (recommended), microcontroller internal storage (be careful as only a few
 # kilobytes are available), or to a filesystem.
