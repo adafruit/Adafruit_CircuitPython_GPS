@@ -1,10 +1,11 @@
 # Simple GPS datalogging demonstration.
 # This example uses the GPS library and to read raw NMEA sentences 
 # over I2C or UART from the GPS unit and dumps them to a file on an SD card
-# (recommended) or internal storage (be careful as only a few kilobytes to
-# megabytes are available).  Before writing to internal storage you MUST
-# carefully follow the steps in this guide to enable writes to the internal
-# filesystem:
+# (recommended), microcontroller internal storage (be careful as only a few
+# kilobytes are available), or to a filesystem.
+# If you are using a microcontroller, before writing to internal storage you
+#  MUST carefully follow the steps in this guide to enable writes to the
+# internal filesystem:
 #  https://learn.adafruit.com/adafruit-ultimate-gps-featherwing/circuitpython-library
 import board
 import busio
@@ -14,15 +15,16 @@ import adafruit_gps
 # which means new lines are added at the end and all old data is kept.
 # Change this path to point at internal storage (like '/gps.txt') or SD
 # card mounted storage ('/sd/gps.txt') as desired.
-LOG_FILE = '/gps.txt'  # Example for writing to internal path /gps.txt
+LOG_FILE = 'gps.txt'  # Example for writing to internal path gps.txt
 
 # File more for opening the log file.  Mode 'ab' means append or add new lines
 # to the end of the file rather than erasing it and starting over.  If you'd
 # like to erase the file and start clean each time use the value 'wb' instead.
 LOG_MODE = 'ab'
 
-# If writing to SD card customize and uncomment these lines to import the
-# necessary library and initialize the SD card:
+# If writing to SD card on a microcontroller customize and uncomment these
+# lines to import the necessary library and initialize the SD card:
+# NOT for use with a single board computer like Raspberry Pi!
 """
 import adafruit_sdcard
 import digitalio
@@ -42,6 +44,12 @@ LOG_FILE = '/sd/gps.txt'     # Example for writing to SD card path /sd/gps.txt
 # These are the defaults you should use for the GPS FeatherWing.
 # For other boards set RX = GPS module TX, and TX = GPS module RX pins.
 uart = busio.UART(board.TX, board.RX, baudrate=9600, timeout=10)
+
+# If using a USB/Serial converter, use pyserial and update the serial
+# port name to match the serial connection for the GPS!
+#import serial
+#uart = serial.Serial("/dev/ttyUSB0", baudrate=9600, timeout=10)
+
 # If using I2C, we'll create an I2C interface to talk to using default pins
 #i2c = busio.I2C(board.SCL, board.SDA)
 
