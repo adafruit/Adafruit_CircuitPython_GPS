@@ -137,11 +137,11 @@ class GPS:
         data_type, args = sentence
         data_type = bytes(data_type.upper(), "ascii")
         # return sentence
-        if data_type == b'GPGLL':       # GLL, Geographic Position – Latitude/Longitude
+        if data_type in (b'GPGLL', b'GNGGL'):       # GLL, Geographic Position – Latitude/Longitude
             self._parse_gpgll(args)
-        elif data_type == b'GPRMC':     # RMC, minimum location info
+        elif data_type in (b'GPRMC', b'GNRMC'):     # RMC, minimum location info
             self._parse_gprmc(args)
-        elif data_type == b'GPGGA':     # GGA, 3d location fix
+        elif data_type in (b'GPGGA' b'GNGGA'):     # GGA, 3d location fix
             self._parse_gpgga(args)
         return True
 
@@ -193,16 +193,26 @@ class GPS:
         or checksums"""
         return self._uart.write(bytestr)
 
+    @property
+    def in_waiting(self):
+        """Returns number of bytes available in UART read buffer"""
+        return self._uart.in_waiting
+
+    def readline(self):
+        """Returns a \n terminated bytearray, must have timeout set for
+        the underlying UART or this will block forever!"""
+        return self._uart.readline()
+
     def _read_sentence(self):
         # Parse any NMEA sentence that is available.
         # pylint: disable=len-as-condition
         # This needs to be refactored when it can be tested.
 
         # Only continue if we have at least 32 bytes in the input buffer
-        if self._uart.in_waiting < 32:
+        if self.in_waiting < 32:
             return None
 
-        sentence = self._uart.readline()
+        sentence = self.readline()
         if sentence is None or sentence == b'' or len(sentence) < 1:
             return None
         try:
@@ -440,12 +450,15 @@ class GPS_I2C(GPS):
     """I2C GPS parsing module.  Can parse simple NMEA data sentences from
     an I2C-capable GPS module to read latitude, longitude, and more.
     """
-    def __init__(self, i2c_bus, address=_GPSI2C_DEFAULT_ADDRESS, debug=False):
+    def __init__(self, i2c_bus, *, address=_GPSI2C_DEFAULT_ADDRESS, debug=False,
+                 timeout=5):
         import adafruit_bus_device.i2c_device as i2c_device
         super().__init__(None, debug) # init the parent with no UART
         self._i2c = i2c_device.I2CDevice(i2c_bus, address)
         self._lastbyte = None
         self._charbuff = bytearray(1)
+        self._internalbuffer = []
+        self._timeout = timeout
 
     def read(self, num_bytes=1):
         """Read up to num_bytes of data from the GPS directly, without parsing.
@@ -468,3 +481,28 @@ class GPS_I2C(GPS):
         or checksums"""
         with self._i2c as i2c:
             i2c.write(bytestr)
+
+    @property
+    def in_waiting(self):
+        """Returns number of bytes available in UART read buffer, always 32
+        since I2C does not have the ability to know how much data is available"""
+        return 32
+
+    def readline(self):
+        """Returns a \n terminated bytearray, must have timeout set for
+        the underlying UART or this will block forever!"""
+        timeout = time.monotonic() + self._timeout
+        while timeout > time.monotonic():
+            # check if our internal buffer has a '\n' termination already
+            if self._internalbuffer and (self._internalbuffer[-1] == ord('\n')):
+                break
+            char = self.read(1)
+            if not char:
+                continue
+            self._internalbuffer.append(char[0])
+            #print(bytearray(self._internalbuffer))
+        if self._internalbuffer and self._internalbuffer[-1] == ord('\n'):
+            ret = bytearray(self._internalbuffer)
+            self._internalbuffer = []   # reset the buffer to empty
+            return ret
+        return None  # no completed data yet

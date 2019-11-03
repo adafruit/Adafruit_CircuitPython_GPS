@@ -17,7 +17,7 @@ LOG_MODE = 'ab'
 # Create a serial connection for the GPS connection using default speed and
 # a slightly higher timeout (GPS modules typically update once a second).
 # Update the serial port name to match the serial connection for the GPS!
-uart = serial.Serial("/dev/ttyUSB0", baudrate=9600, timeout=30)
+uart = serial.Serial("/dev/ttyUSB0", baudrate=9600, timeout=10)
 
 # Main loop just reads data from the GPS module and writes it back out to
 # the output file while also printing to serial output.

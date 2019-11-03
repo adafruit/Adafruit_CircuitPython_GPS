@@ -36,7 +36,7 @@ LOG_MODE = 'ab'
 # a slightly higher timeout (GPS modules typically update once a second).
 # These are the defaults you should use for the GPS FeatherWing.
 # For other boards set RX = GPS module TX, and TX = GPS module RX pins.
-uart = busio.UART(board.TX, board.RX, baudrate=9600, timeout=30)
+uart = busio.UART(board.TX, board.RX, baudrate=9600, timeout=10)
 
 # Main loop just reads data from the GPS module and writes it back out to
 # the output file while also printing to serial output.

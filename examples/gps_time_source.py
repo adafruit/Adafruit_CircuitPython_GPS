@@ -8,7 +8,7 @@ import busio
 import rtc
 import adafruit_gps
 
-uart = busio.UART(board.TX, board.RX, baudrate=9600, timeout=30)
+uart = busio.UART(board.TX, board.RX, baudrate=9600, timeout=10)
 
 gps = adafruit_gps.GPS(uart, debug=False)
 gps.send_command(b'PMTK314,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0')
