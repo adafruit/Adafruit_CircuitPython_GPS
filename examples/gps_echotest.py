@@ -1,29 +1,28 @@
 # Simple GPS module demonstration.
 # Will print NMEA sentences received from the GPS, great for testing connection
-# Uses the GPS only to send some commands, then reads directly from UART
+# Uses the GPS to send some commands, then reads directly from the GPS
 import time
 import board
 import busio
 
 import adafruit_gps
 
-
-# Define RX and TX pins for the board's serial port connected to the GPS.
-# These are the defaults you should use for the GPS FeatherWing.
-# For other boards set RX = GPS module TX, and TX = GPS module RX pins.
-RX = board.RX
-TX = board.TX
-
 # Create a serial connection for the GPS connection using default speed and
 # a slightly higher timeout (GPS modules typically update once a second).
-uart = busio.UART(TX, RX, baudrate=9600, timeout=30)
+# These are the defaults you should use for the GPS FeatherWing.
+# For other boards set RX = GPS module TX, and TX = GPS module RX pins.
+uart = busio.UART(board.TX, board.RX, baudrate=9600, timeout=10)
 
 # for a computer, use the pyserial library for uart access
 #import serial
-#uart = serial.Serial("/dev/ttyUSB0", baudrate=9600, timeout=3000)
+#uart = serial.Serial("/dev/ttyUSB0", baudrate=9600, timeout=10)
+
+# If using I2C, we'll create an I2C interface to talk to using default pins
+#i2c = busio.I2C(board.SCL, board.SDA)
 
 # Create a GPS module instance.
-gps = adafruit_gps.GPS(uart)
+gps = adafruit_gps.GPS(uart)     # Use UART/pyserial
+#gps = adafruit_gps.GPS_GtopI2C(i2c)  # Use I2C interface
 
 # Initialize the GPS module by changing what data it sends and at what rate.
 # These are NMEA extensions for PMTK_314_SET_NMEA_OUTPUT and
@@ -52,7 +51,7 @@ gps.send_command(b'PMTK220,1000')
 # Main loop runs forever printing data as it comes in
 timestamp = time.monotonic()
 while True:
-    data = uart.read(32)  # read up to 32 bytes
+    data = gps.read(32)  # read up to 32 bytes
     # print(data)  # this is a bytearray type
 
     if data is not None:

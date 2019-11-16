@@ -43,15 +43,17 @@ Implementation Notes
 
 """
 import time
+from micropython import const
 
 __version__ = "0.0.0-auto.0"
 __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_GPS.git"
 
+
+_GPSI2C_DEFAULT_ADDRESS = const(0x10)
+
 # Internal helper parsing functions.
 # These handle input that might be none or null and return none instead of
 # throwing errors.
-
-
 def _parse_degrees(nmea_data):
     # Parse a NMEA lat/long data pair 'dddmm.mmmm' into a pure degrees value.
     # Where ddd is the degrees, mm.mmmm is the minutes.
@@ -135,11 +137,11 @@ class GPS:
         data_type, args = sentence
         data_type = bytes(data_type.upper(), "ascii")
         # return sentence
-        if data_type == b'GPGLL':       # GLL, Geographic Position – Latitude/Longitude
+        if data_type in (b'GPGLL', b'GNGGL'):       # GLL, Geographic Position – Latitude/Longitude
             self._parse_gpgll(args)
-        elif data_type == b'GPRMC':     # RMC, minimum location info
+        elif data_type in (b'GPRMC', b'GNRMC'):     # RMC, minimum location info
             self._parse_gprmc(args)
-        elif data_type == b'GPGGA':     # GGA, 3d location fix
+        elif data_type in (b'GPGGA', b'GNGGA'):     # GGA, 3d location fix
             self._parse_gpgga(args)
         return True
 
@@ -149,15 +151,15 @@ class GPS:
         Note you should NOT add the leading $ and trailing * to the command
         as they will automatically be added!
         """
-        self._uart.write(b'$')
-        self._uart.write(command)
+        self.write(b'$')
+        self.write(command)
         if add_checksum:
             checksum = 0
             for char in command:
                 checksum ^= char
-            self._uart.write(b'*')
-            self._uart.write(bytes('{:02x}'.format(checksum).upper(), "ascii"))
-        self._uart.write(b'\r\n')
+            self.write(b'*')
+            self.write(bytes('{:02x}'.format(checksum).upper(), "ascii"))
+        self.write(b'\r\n')
 
     @property
     def has_fix(self):
@@ -181,16 +183,36 @@ class GPS:
         """Return raw_sentence which is the raw NMEA sentence read from the GPS"""
         return self._raw_sentence
 
+    def read(self, num_bytes):
+        """Read up to num_bytes of data from the GPS directly, without parsing.
+        Returns a bytearray with up to num_bytes or None if nothing was read"""
+        return self._uart.read(num_bytes)
+
+    def write(self, bytestr):
+        """Write a bytestring data to the GPS directly, without parsing
+        or checksums"""
+        return self._uart.write(bytestr)
+
+    @property
+    def in_waiting(self):
+        """Returns number of bytes available in UART read buffer"""
+        return self._uart.in_waiting
+
+    def readline(self):
+        """Returns a newline terminated bytearray, must have timeout set for
+        the underlying UART or this will block forever!"""
+        return self._uart.readline()
+
     def _read_sentence(self):
         # Parse any NMEA sentence that is available.
         # pylint: disable=len-as-condition
         # This needs to be refactored when it can be tested.
 
         # Only continue if we have at least 32 bytes in the input buffer
-        if self._uart.in_waiting < 32:
+        if self.in_waiting < 32:
             return None
 
-        sentence = self._uart.readline()
+        sentence = self.readline()
         if sentence is None or sentence == b'' or len(sentence) < 1:
             return None
         try:
@@ -423,3 +445,64 @@ class GPS:
         except TypeError:
             pass
         self.satellites_prev = self.satellites
+
+class GPS_GtopI2C(GPS):
+    """GTop-compatible I2C GPS parsing module.  Can parse simple NMEA data
+    sentences from an I2C-capable GPS module to read latitude, longitude, and more.
+    """
+    def __init__(self, i2c_bus, *, address=_GPSI2C_DEFAULT_ADDRESS, debug=False,
+                 timeout=5):
+        import adafruit_bus_device.i2c_device as i2c_device
+        super().__init__(None, debug) # init the parent with no UART
+        self._i2c = i2c_device.I2CDevice(i2c_bus, address)
+        self._lastbyte = None
+        self._charbuff = bytearray(1)
+        self._internalbuffer = []
+        self._timeout = timeout
+
+    def read(self, num_bytes=1):
+        """Read up to num_bytes of data from the GPS directly, without parsing.
+        Returns a bytearray with up to num_bytes or None if nothing was read"""
+        result = []
+        for _ in range(num_bytes):
+            with self._i2c as i2c:
+                # we read one byte at a time, verify it isnt part of a string of
+                # 'stuffed' newlines and then append to our result array for byteification
+                i2c.readinto(self._charbuff)
+                char = self._charbuff[0]
+                if (char == ord('\n')) and (self._lastbyte != ord('\r')):
+                    continue # skip duplicate \n's!
+                result.append(char)
+                self._lastbyte = char  # keep track of the last character approved
+        return bytearray(result)
+
+    def write(self, bytestr):
+        """Write a bytestring data to the GPS directly, without parsing
+        or checksums"""
+        with self._i2c as i2c:
+            i2c.write(bytestr)
+
+    @property
+    def in_waiting(self):
+        """Returns number of bytes available in UART read buffer, always 32
+        since I2C does not have the ability to know how much data is available"""
+        return 32
+
+    def readline(self):
+        """Returns a newline terminated bytearray, must have timeout set for
+        the underlying UART or this will block forever!"""
+        timeout = time.monotonic() + self._timeout
+        while timeout > time.monotonic():
+            # check if our internal buffer has a '\n' termination already
+            if self._internalbuffer and (self._internalbuffer[-1] == ord('\n')):
+                break
+            char = self.read(1)
+            if not char:
+                continue
+            self._internalbuffer.append(char[0])
+            #print(bytearray(self._internalbuffer))
+        if self._internalbuffer and self._internalbuffer[-1] == ord('\n'):
+            ret = bytearray(self._internalbuffer)
+            self._internalbuffer = []   # reset the buffer to empty
+            return ret
+        return None  # no completed data yet

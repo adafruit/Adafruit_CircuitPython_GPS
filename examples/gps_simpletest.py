@@ -7,23 +7,22 @@ import busio
 
 import adafruit_gps
 
-
-# Define RX and TX pins for the board's serial port connected to the GPS.
-# These are the defaults you should use for the GPS FeatherWing.
-# For other boards set RX = GPS module TX, and TX = GPS module RX pins.
-RX = board.RX
-TX = board.TX
-
 # Create a serial connection for the GPS connection using default speed and
 # a slightly higher timeout (GPS modules typically update once a second).
-uart = busio.UART(TX, RX, baudrate=9600, timeout=30)
+# These are the defaults you should use for the GPS FeatherWing.
+# For other boards set RX = GPS module TX, and TX = GPS module RX pins.
+uart = busio.UART(board.TX, board.RX, baudrate=9600, timeout=10)
 
 # for a computer, use the pyserial library for uart access
 #import serial
-#uart = serial.Serial("/dev/ttyUSB0", baudrate=9600, timeout=3000)
+#uart = serial.Serial("/dev/ttyUSB0", baudrate=9600, timeout=10)
+
+# If using I2C, we'll create an I2C interface to talk to using default pins
+#i2c = busio.I2C(board.SCL, board.SDA)
 
 # Create a GPS module instance.
-gps = adafruit_gps.GPS(uart, debug=False)
+gps = adafruit_gps.GPS(uart, debug=False)     # Use UART/pyserial
+#gps = adafruit_gps.GPS_GtopI2C(i2c, debug=False)  # Use I2C interface
 
 # Initialize the GPS module by changing what data it sends and at what rate.
 # These are NMEA extensions for PMTK_314_SET_NMEA_OUTPUT and

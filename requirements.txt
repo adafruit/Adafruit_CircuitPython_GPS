@@ -1,2 +1,3 @@
 Adafruit-Blinka
 pyserial
+adafruit-circuitpython-busdevice
