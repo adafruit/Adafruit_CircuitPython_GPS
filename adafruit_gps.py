@@ -446,9 +446,9 @@ class GPS:
             pass
         self.satellites_prev = self.satellites
 
-class GPS_I2C(GPS):
-    """I2C GPS parsing module.  Can parse simple NMEA data sentences from
-    an I2C-capable GPS module to read latitude, longitude, and more.
+class GPS_GtopI2C(GPS):
+    """GTop-compatible I2C GPS parsing module.  Can parse simple NMEA data
+    sentences from an I2C-capable GPS module to read latitude, longitude, and more.
     """
     def __init__(self, i2c_bus, *, address=_GPSI2C_DEFAULT_ADDRESS, debug=False,
                  timeout=5):

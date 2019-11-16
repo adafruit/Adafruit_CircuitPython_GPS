@@ -55,7 +55,7 @@ uart = busio.UART(board.TX, board.RX, baudrate=9600, timeout=10)
 
 # Create a GPS module instance.
 gps = adafruit_gps.GPS(uart)     # Use UART/pyserial
-#gps = adafruit_gps.GPS_I2C(i2c)  # Use I2C interface
+#gps = adafruit_gps.GPS_GtopI2C(i2c)  # Use I2C interface
 
 # Main loop just reads data from the GPS module and writes it back out to
 # the output file while also printing to serial output.
