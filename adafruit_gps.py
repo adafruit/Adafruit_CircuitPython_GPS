@@ -141,7 +141,7 @@ class GPS:
         # return sentence
         if data_type in (
             b"GPGLL",
-            b"GNGGL",
+            b"GNGLL",
         ):  # GLL, Geographic Position – Latitude/Longitude
             self._parse_gpgll(args)
         elif data_type in (b"GPRMC", b"GNRMC"):  # RMC, minimum location info
