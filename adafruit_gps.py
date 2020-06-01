@@ -45,7 +45,7 @@ Implementation Notes
 import time
 from micropython import const
 
-__version__ = "0.0.0-auto.0"
+__version__ = "3.6.3"
 __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_GPS.git"
 
 
@@ -260,7 +260,7 @@ class GPS:
 
     def _parse_gpgll(self, args):
         data = args.split(",")
-        if data is None or data[0] is None:
+        if data is None or data[0] is None or (data[0] == ''):
             return  # Unexpected number of params.
 
         # Parse latitude and longitude.
@@ -295,7 +295,7 @@ class GPS:
         # Parse the arguments (everything after data type) for NMEA GPRMC
         # minimum location fix sentence.
         data = args.split(",")
-        if data is None or len(data) < 11 or data[0] is None:
+        if data is None or len(data) < 11 or data[0] is None or (data[0] == ''):
             return  # Unexpected number of params.
         # Parse fix time.
         time_utc = int(_parse_float(data[0]))
@@ -374,7 +374,7 @@ class GPS:
         # Parse the arguments (everything after data type) for NMEA GPGGA
         # 3D location fix sentence.
         data = args.split(",")
-        if data is None or len(data) != 14:
+        if data is None or len(data) != 14 or (data[0] == ''):
             return  # Unexpected number of params.
         # Parse fix time.
         time_utc = int(_parse_float(data[0]))
@@ -421,7 +421,7 @@ class GPS:
 
     def _parse_gpgsa(self, args):
         data = args.split(",")
-        if data is None:
+        if data is None or (data[0] == ''):
             return  # Unexpected number of params
 
         # Parse selection mode
@@ -444,7 +444,7 @@ class GPS:
         # Parse the arguments (everything after data type) for NMEA GPGGA
         # 3D location fix sentence.
         data = args.split(",")
-        if data is None:
+        if data is None or (data[0] == ''):
             return  # Unexpected number of params.
 
         # Parse number of messages
