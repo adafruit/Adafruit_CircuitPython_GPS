@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2021 ladyada for Adafruit Industries
+# SPDX-License-Identifier: MIT
+
 # Simple GPS module demonstration.
 # Will print NMEA sentences received from the GPS, great for testing connection
 # Uses the GPS to send some commands, then reads directly from the GPS

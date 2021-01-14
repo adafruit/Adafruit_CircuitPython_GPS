@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2021 ladyada for Adafruit Industries
+# SPDX-License-Identifier: MIT
+
 # Simple script using GPS timestamps as RTC time source
 # The GPS timestamps are available without a fix and keep the track of
 # time while there is powersource (ie coin cell battery)

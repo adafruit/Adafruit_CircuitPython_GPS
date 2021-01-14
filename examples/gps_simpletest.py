@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2021 ladyada for Adafruit Industries
+# SPDX-License-Identifier: MIT
+
 # Simple GPS module demonstration.
 # Will wait for a fix and print a message every second with the current location
 # and other details.

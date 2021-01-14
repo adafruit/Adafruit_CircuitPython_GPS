@@ -58,7 +58,7 @@ Usage Example
 
 See examples/gps_simpletest.py for a demonstration of parsing and printing GPS location.
 
-Important: 
+Important:
 Feather boards and many other circuitpython boards will round to two decimal places like this:
 
 .. code-block:: python
@@ -66,7 +66,7 @@ Feather boards and many other circuitpython boards will round to two decimal pla
     >>> float('1234.5678')
     1234.57
 
-This isn't ideal for GPS data as this lowers the accuracy from 0.1m to 11m. 
+This isn't ideal for GPS data as this lowers the accuracy from 0.1m to 11m.
 
 This can be fixed by using string formatting when the GPS data is output.
 
@@ -113,7 +113,7 @@ These two lines are the lines that actually solve the issue:
 
     print('Latitude: {0:.6f} degrees'.format(gps.latitude))
     print('Longitude: {0:.6f} degrees'.format(gps.longitude))
-   
+
 
 Note: Sending multiple PMTK314 packets with gps.send_command() will not work unless there is a substantial amount of time in-between each time gps.send_command() is called. A time.sleep() of 1 second or more should fix this.
 
@@ -144,7 +144,7 @@ Here's an explanation of GGA:
    * 0 - fix not available,
    * 1 - GPS fix,
    * 2 - Differential GPS fix
-    
+
 7. Number of satellites in view, 00 - 12
 8. Horizontal Dilution of precision
 9. Antenna Altitude above/below mean-sea-level (geoid)
