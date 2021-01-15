@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2021 ladyada for Adafruit Industries
+# SPDX-License-Identifier: MIT
+
 # Simple GPS datalogging demonstration.
 # This example uses the GPS library and to read raw NMEA sentences
 # over I2C or UART from the GPS unit and dumps them to a file on an SD card
