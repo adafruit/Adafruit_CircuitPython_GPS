@@ -133,6 +133,8 @@ class GPS:
             self._parse_gpgga(args)
         elif data_type in (b"GLGSV", b"GPGSV", b"GNGSV"):  # GSV, Satellites in view
             self._parse_gpgsv(args)
+        elif data_type in (b"GLGSA", b"GPGSA", b"GNGSA"):  # GSA, GPS DOP and active satellites
+            self._parse_gpgsa(args)
         return True
 
     def send_command(self, command, add_checksum=True):
