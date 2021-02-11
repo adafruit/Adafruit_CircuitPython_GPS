@@ -131,7 +131,7 @@ class GPS:
             self._parse_gprmc(args)
         elif data_type in (b"GPGGA", b"GNGGA"):  # GGA, 3d location fix
             self._parse_gpgga(args)
-        elif data_type in (b"GLGSV", b"GPGSV", b"GNGSV"):  # GSV, Satelittes in view
+        elif data_type in (b"GLGSV", b"GPGSV", b"GNGSV"):  # GSV, Satellites in view
             self._parse_gpgsv(args)
         return True
 
