@@ -131,6 +131,8 @@ class GPS:
             self._parse_gprmc(args)
         elif data_type in (b"GPGGA", b"GNGGA"):  # GGA, 3d location fix
             self._parse_gpgga(args)
+        elif data_type in (b"GLGSV", b"GPGSV", b"GNGSV"):  # GSV, Satelittes in view
+            self._parse_gpgsv(args)
         return True
 
     def send_command(self, command, add_checksum=True):
@@ -443,7 +445,7 @@ class GPS:
         sat_tup = data[3:]
 
         satdict = {}
-        for i in range(len(sat_tup) / 4):
+        for i in range(len(sat_tup) // 4):
             j = i * 4
             key = "gps{}".format(i + (4 * (self.mess_num - 1)))
             satnum = _parse_int(sat_tup[0 + j])  # Satellite number
@@ -460,13 +462,8 @@ class GPS:
 
         try:
             if self.satellites < self.satellites_prev:
-                for i in self.sats:
-                    try:
-                        if int(i[-2]) >= self.satellites:
-                            del self.sats[i]
-                    except ValueError:
-                        if int(i[-1]) >= self.satellites:
-                            del self.sats[i]
+                for i in range(self.satellites, self.satellites_prev):
+                    del self.sats[f"gps{i}"]
         except TypeError:
             pass
         self.satellites_prev = self.satellites
