@@ -121,15 +121,27 @@ class GPS:
             print(sentence)
         data_type, args = sentence
         data_type = bytes(data_type.upper(), "ascii")
-        # return sentence
-        if data_type in (
-            b"GPGLL",
-            b"GNGLL",
-        ):  # GLL, Geographic Position – Latitude/Longitude
+        (talker, sentence_type) = (data_type[:2], data_type[2:])
+
+        # Check for all currently known talkers
+        # GA - Galileo
+        # GB - BeiDou Systems
+        # GI - NavIC
+        # GL - GLONASS
+        # GP - GPS
+        # GQ - QZSS
+        # GN - GNSS / More than one of the above
+        if talker not in (b'GA', b'GB', b'GI', b'GL', b'GP', b'GQ', b'GN'):
+            if self.debug:
+                print(f"  Unknown talker: {talker}")
+            # We don't know the talker so it's not new data
+            return False
+
+        if sentence_type == b'GLL':    # Geographic position - Latitude/Longitude
             self._parse_gpgll(args)
-        elif data_type in (b"GPRMC", b"GNRMC"):  # RMC, minimum location info
+        elif sentence_type == b'RMC':  # Minimum location info
             self._parse_gprmc(args)
-        elif data_type in (b"GPGGA", b"GNGGA"):  # GGA, 3d location fix
+        elif sentence_type == b'GGA':  # 3D location fix
             self._parse_gpgga(args)
         return True
 
