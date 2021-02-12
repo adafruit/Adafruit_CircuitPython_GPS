@@ -90,6 +90,7 @@ class GPS:
         self.height_geoid = None
         self.speed_knots = None
         self.track_angle_deg = None
+        self._sats = None
         self.sats = None
         self.isactivedata = None
         self.true_track = None
@@ -121,9 +122,9 @@ class GPS:
             print(sentence)
         data_type, args = sentence
         data_type = bytes(data_type.upper(), "ascii")
-        (talker, sentence_type) = (data_type[:2], data_type[2:])
+        (talker, sentence_type) = self._parse_talker(data_type)
 
-        # Check for all currently known talkers
+        # Check for all currently known GNSS talkers
         # GA - Galileo
         # GB - BeiDou Systems
         # GI - NavIC
@@ -132,10 +133,8 @@ class GPS:
         # GQ - QZSS
         # GN - GNSS / More than one of the above
         if talker not in (b'GA', b'GB', b'GI', b'GL', b'GP', b'GQ', b'GN'):
-            if self.debug:
-                print(f"  Unknown talker: {talker}")
-            # We don't know the talker so it's not new data
-            return False
+            # It's not a known GNSS source of data
+            return True
 
         if sentence_type == b'GLL':    # Geographic position - Latitude/Longitude
             self._parse_gpgll(args)
@@ -143,6 +142,10 @@ class GPS:
             self._parse_gprmc(args)
         elif sentence_type == b'GGA':  # 3D location fix
             self._parse_gpgga(args)
+        elif sentence_type == b'GSV':  # Satellites in view
+            self._parse_gpgsv(talker, args)
+        elif sentence_type == b'GSA':  # GPS DOP and active satellites
+            self._parse_gpgsa(talker, args)
         return True
 
     def send_command(self, command, add_checksum=True):
@@ -252,6 +255,13 @@ class GPS:
             return None  # Invalid sentence, no comma after data type.
         data_type = sentence[1:delimiter]
         return (data_type, sentence[delimiter + 1 :])
+
+    def _parse_talker(self, data_type):
+        # Split the data_type into talker and sentence_type
+        if data_type[0] == b'P': # Proprietary codes
+            return (data_type[:1], data_type[1:])
+        else:
+            return (data_type[:2], data_type[2:])
 
     def _parse_gpgll(self, args):
         data = args.split(",")
@@ -414,7 +424,8 @@ class GPS:
         self.altitude_m = _parse_float(data[8])
         self.height_geoid = _parse_float(data[10])
 
-    def _parse_gpgsa(self, args):
+    def _parse_gpgsa(self, talker, args):
+        talker = talker.decode('ascii')
         data = args.split(",")
         if data is None or (data[0] == ""):
             return  # Unexpected number of params
@@ -424,9 +435,9 @@ class GPS:
         # Parse 3d fix
         self.fix_quality_3d = _parse_int(data[1])
         satlist = list(filter(None, data[2:-4]))
-        self.sat_prns = {}
-        for i, sat in enumerate(satlist, 1):
-            self.sat_prns["gps{}".format(i)] = _parse_int(sat)
+        self.sat_prns = []
+        for sat in satlist:
+            self.sat_prns.append("{}{}".format(talker, _parse_int(sat)))
 
         # Parse PDOP, dilution of precision
         self.pdop = _parse_float(data[-3])
@@ -435,9 +446,10 @@ class GPS:
         # Parse VDOP, vertical dilution of precision
         self.vdop = _parse_float(data[-1])
 
-    def _parse_gpgsv(self, args):
+    def _parse_gpgsv(self, talker, args):
         # Parse the arguments (everything after data type) for NMEA GPGGA
         # 3D location fix sentence.
+        talker = talker.decode('ascii')
         data = args.split(",")
         if data is None or (data[0] == ""):
             return  # Unexpected number of params.
@@ -454,33 +466,40 @@ class GPS:
 
         sat_tup = data[3:]
 
-        satdict = {}
-        for i in range(len(sat_tup) / 4):
+        satlist = []
+        for i in range(len(sat_tup) // 4):
             j = i * 4
-            key = "gps{}".format(i + (4 * (self.mess_num - 1)))
-            satnum = _parse_int(sat_tup[0 + j])  # Satellite number
+            satnum = "{}{}".format(talker, _parse_int(sat_tup[0 + j]))  # Satellite number
             satdeg = _parse_int(sat_tup[1 + j])  # Elevation in degrees
             satazim = _parse_int(sat_tup[2 + j])  # Azimuth in degrees
             satsnr = _parse_int(sat_tup[3 + j])  # signal-to-noise ratio in dB
             value = (satnum, satdeg, satazim, satsnr)
-            satdict[key] = value
+            satlist.append(value)
 
-        if self.sats is None:
-            self.sats = {}
-        for satnum in satdict:
-            self.sats[satnum] = satdict[satnum]
+        if self._sats is None:
+            self._sats = []
+        for value in satlist:
+            self._sats.append(value)
 
-        try:
-            if self.satellites < self.satellites_prev:
-                for i in self.sats:
-                    try:
-                        if int(i[-2]) >= self.satellites:
-                            del self.sats[i]
-                    except ValueError:
-                        if int(i[-1]) >= self.satellites:
-                            del self.sats[i]
-        except TypeError:
-            pass
+        if self.mess_num == self.total_mess_num:
+            # Last part of GSV message
+            if len(self._sats) == self.satellites:
+                # Transfer received satellites to self.sats
+                if self.sats is None:
+                    self.sats = {}
+                else:
+                    # Remove all old data from self.sats which
+                    # match the current talker
+                    old = []
+                    for i in self.sats:
+                        if i[0:2] == talker:
+                            old.append(i)
+                    for i in old:
+                        self.sats.pop(i)
+                for s in self._sats:
+                    self.sats[s[0]] = s
+            self._sats.clear()
+
         self.satellites_prev = self.satellites
 
 
