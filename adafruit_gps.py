@@ -122,7 +122,7 @@ class GPS:
             print(sentence)
         data_type, args = sentence
         data_type = bytes(data_type.upper(), "ascii")
-        (talker, sentence_type) = self._parse_talker(data_type)
+        (talker, sentence_type) = GPS._parse_talker(data_type)
 
         # Check for all currently known GNSS talkers
         # GA - Galileo
@@ -256,12 +256,13 @@ class GPS:
         data_type = sentence[1:delimiter]
         return (data_type, sentence[delimiter + 1 :])
 
-    def _parse_talker(self, data_type):
+    @staticmethod
+    def _parse_talker(data_type):
         # Split the data_type into talker and sentence_type
         if data_type[0] == b"P":  # Proprietary codes
             return (data_type[:1], data_type[1:])
-        else:
-            return (data_type[:2], data_type[2:])
+
+        return (data_type[:2], data_type[2:])
 
     def _parse_gpgll(self, args):
         data = args.split(",")
@@ -448,6 +449,7 @@ class GPS:
 
     def _parse_gpgsv(self, talker, args):
         # Parse the arguments (everything after data type) for NMEA GPGGA
+        # pylint: disable=too-many-branches
         # 3D location fix sentence.
         talker = talker.decode("ascii")
         data = args.split(",")
@@ -471,15 +473,18 @@ class GPS:
         for i in range(len(sat_tup) // 4):
             try:
                 j = i * 4
-                # Satellite number
-                satnum = "{}{}".format(talker, _parse_int(sat_tup[0 + j]))
-                # Elevation in degrees
-                satdeg = _parse_int(sat_tup[1 + j])
-                # Azimuth in degrees
-                satazim = _parse_int(sat_tup[2 + j])
-                # signal-to-noise ratio in dB
-                satsnr = _parse_int(sat_tup[3 + j])
-                value = (satnum, satdeg, satazim, satsnr, timestamp)
+                value = (
+                    # Satellite number
+                    "{}{}".format(talker, _parse_int(sat_tup[0 + j])),
+                    # Elevation in degrees
+                    _parse_int(sat_tup[1 + j]),
+                    # Azimuth in degrees
+                    _parse_int(sat_tup[2 + j]),
+                    # signal-to-noise ratio in dB
+                    _parse_int(sat_tup[3 + j]),
+                    # Timestamp
+                    timestamp,
+                )
                 satlist.append(value)
             except ValueError:
                 # Something wasn't an int
@@ -507,8 +512,8 @@ class GPS:
                             old.append(i)
                     for i in old:
                         self.sats.pop(i)
-                for s in self._sats:
-                    self.sats[s[0]] = s
+                for sat in self._sats:
+                    self.sats[sat[0]] = sat
             self._sats.clear()
 
         self.satellites_prev = self.satellites
