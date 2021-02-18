@@ -31,7 +31,7 @@ gps = adafruit_gps.GPS_GtopI2C(i2c, debug=False)  # Use I2C interface
 #   https://cdn-shop.adafruit.com/datasheets/PMTK_A11.pdf
 
 # Turn on everything (not all of it is parsed!)
-gps.send_command(b'PMTK314,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0')
+gps.send_command(b"PMTK314,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0")
 
 # Set update rate to once a second (1hz) which is what you typically want.
 gps.send_command(b"PMTK220,1000")
@@ -41,6 +41,7 @@ gps.send_command(b"PMTK220,1000")
 # You can also speed up the rate, but don't go too fast or else you can lose
 # data during parsing.  This would be twice a second (2hz, 500ms delay):
 # gps.send_command(b'PMTK220,500')
+
 
 def format_dop(dop):
     # https://en.wikipedia.org/wiki/Dilution_of_precision_(navigation)
@@ -58,15 +59,16 @@ def format_dop(dop):
         msg = "Ideal"
     return f"{dop} - {msg}"
 
+
 talkers = {
-    'GA': 'Galileo',
-    'GB': 'BeiDou',
-    'GI': 'NavIC',
-    'GL': 'GLONASS',
-    'GP': 'GPS',
-    'GQ': 'QZSS',
-    'GN': 'GNSS'
-    }
+    "GA": "Galileo",
+    "GB": "BeiDou",
+    "GI": "NavIC",
+    "GL": "GLONASS",
+    "GP": "GPS",
+    "GQ": "QZSS",
+    "GN": "GNSS",
+}
 
 # Main loop runs forever printing the location, etc. every second.
 last_print = time.monotonic()
@@ -97,7 +99,9 @@ while True:
                     if sat is None:
                         print(f"  {talker}-{number} - no info")
                     else:
-                        print(f"  {talker}-{number} Elevation:{sat[1]}* Azimuth:{sat[2]}* SNR:{sat[3]}dB")
+                        print(
+                            f"  {talker}-{number} Elevation:{sat[1]}* Azimuth:{sat[2]}* SNR:{sat[3]}dB"
+                        )
                 except KeyError:
-                   print(f"  {talker}-{number} - no info") 
+                    print(f"  {talker}-{number} - no info")
         print()

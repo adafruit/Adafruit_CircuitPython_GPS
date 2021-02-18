@@ -90,8 +90,8 @@ class GPS:
         self.height_geoid = None
         self.speed_knots = None
         self.track_angle_deg = None
-        self._sats = None # Temporary holder for information from GSV messages
-        self.sats = None # Completed information from GSV messages
+        self._sats = None  # Temporary holder for information from GSV messages
+        self.sats = None  # Completed information from GSV messages
         self.isactivedata = None
         self.true_track = None
         self.mag_track = None
@@ -132,19 +132,19 @@ class GPS:
         # GP - GPS
         # GQ - QZSS
         # GN - GNSS / More than one of the above
-        if talker not in (b'GA', b'GB', b'GI', b'GL', b'GP', b'GQ', b'GN'):
+        if talker not in (b"GA", b"GB", b"GI", b"GL", b"GP", b"GQ", b"GN"):
             # It's not a known GNSS source of data
             return True
 
-        if sentence_type == b'GLL':    # Geographic position - Latitude/Longitude
+        if sentence_type == b"GLL":  # Geographic position - Latitude/Longitude
             self._parse_gpgll(args)
-        elif sentence_type == b'RMC':  # Minimum location info
+        elif sentence_type == b"RMC":  # Minimum location info
             self._parse_gprmc(args)
-        elif sentence_type == b'GGA':  # 3D location fix
+        elif sentence_type == b"GGA":  # 3D location fix
             self._parse_gpgga(args)
-        elif sentence_type == b'GSV':  # Satellites in view
+        elif sentence_type == b"GSV":  # Satellites in view
             self._parse_gpgsv(talker, args)
-        elif sentence_type == b'GSA':  # GPS DOP and active satellites
+        elif sentence_type == b"GSA":  # GPS DOP and active satellites
             self._parse_gpgsa(talker, args)
         return True
 
@@ -258,7 +258,7 @@ class GPS:
 
     def _parse_talker(self, data_type):
         # Split the data_type into talker and sentence_type
-        if data_type[0] == b'P': # Proprietary codes
+        if data_type[0] == b"P":  # Proprietary codes
             return (data_type[:1], data_type[1:])
         else:
             return (data_type[:2], data_type[2:])
@@ -425,7 +425,7 @@ class GPS:
         self.height_geoid = _parse_float(data[10])
 
     def _parse_gpgsa(self, talker, args):
-        talker = talker.decode('ascii')
+        talker = talker.decode("ascii")
         data = args.split(",")
         if data is None or (data[0] == ""):
             return  # Unexpected number of params
@@ -449,7 +449,7 @@ class GPS:
     def _parse_gpgsv(self, talker, args):
         # Parse the arguments (everything after data type) for NMEA GPGGA
         # 3D location fix sentence.
-        talker = talker.decode('ascii')
+        talker = talker.decode("ascii")
         data = args.split(",")
         if data is None or (data[0] == ""):
             return  # Unexpected number of params.
