@@ -3,7 +3,6 @@
 
 import time
 import board
-import busio
 
 import adafruit_gps
 
@@ -87,21 +86,20 @@ while True:
         print(f"  PDOP (Position Dilution of Precision): {format_dop(gps.pdop)}")
         print(f"  HDOP (Horizontal Dilution of Precision): {format_dop(gps.hdop)}")
         print(f"  VDOP (Vertical Dilution of Precision): {format_dop(gps.vdop)}")
-        print(f"Satellites used for fix:")
+        print("Satellites used for fix:")
         for s in gps.sat_prns:
             talker = talkers[s[0:2]]
             number = s[2:]
+            print(f"  {talker}-{number} ", end="")
             if gps.sats is None:
-                print(f"  {talker}-{number} - no info")
+                print("- no info")
             else:
                 try:
                     sat = gps.sats[s]
                     if sat is None:
-                        print(f"  {talker}-{number} - no info")
+                        print("- no info")
                     else:
-                        print(
-                            f"  {talker}-{number} Elevation:{sat[1]}* Azimuth:{sat[2]}* SNR:{sat[3]}dB"
-                        )
+                        print(f"Elevation:{sat[1]}* Azimuth:{sat[2]}* SNR:{sat[3]}dB")
                 except KeyError:
-                    print(f"  {talker}-{number} - no info")
+                    print("- no info")
         print()
