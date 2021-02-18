@@ -90,8 +90,8 @@ class GPS:
         self.height_geoid = None
         self.speed_knots = None
         self.track_angle_deg = None
-        self._sats = None
-        self.sats = None
+        self._sats = None # Temporary holder for information from GSV messages
+        self.sats = None # Completed information from GSV messages
         self.isactivedata = None
         self.true_track = None
         self.mag_track = None
@@ -467,14 +467,23 @@ class GPS:
         sat_tup = data[3:]
 
         satlist = []
+        timestamp = time.monotonic()
         for i in range(len(sat_tup) // 4):
-            j = i * 4
-            satnum = "{}{}".format(talker, _parse_int(sat_tup[0 + j]))  # Satellite number
-            satdeg = _parse_int(sat_tup[1 + j])  # Elevation in degrees
-            satazim = _parse_int(sat_tup[2 + j])  # Azimuth in degrees
-            satsnr = _parse_int(sat_tup[3 + j])  # signal-to-noise ratio in dB
-            value = (satnum, satdeg, satazim, satsnr)
-            satlist.append(value)
+            try:
+                j = i * 4
+                # Satellite number
+                satnum = "{}{}".format(talker, _parse_int(sat_tup[0 + j]))
+                # Elevation in degrees
+                satdeg = _parse_int(sat_tup[1 + j])
+                # Azimuth in degrees
+                satazim = _parse_int(sat_tup[2 + j])
+                # signal-to-noise ratio in dB
+                satsnr = _parse_int(sat_tup[3 + j])
+                value = (satnum, satdeg, satazim, satsnr, timestamp)
+                satlist.append(value)
+            except ValueError:
+                # Something wasn't an int
+                pass
 
         if self._sats is None:
             self._sats = []
@@ -488,11 +497,13 @@ class GPS:
                 if self.sats is None:
                     self.sats = {}
                 else:
-                    # Remove all old data from self.sats which
-                    # match the current talker
+                    # Remove all satellites which haven't
+                    # been seen for 30 seconds
+                    timestamp = time.monotonic()
                     old = []
                     for i in self.sats:
-                        if i[0:2] == talker:
+                        sat = self.sats[i]
+                        if (timestamp - sat[4]) > 30:
                             old.append(i)
                     for i in old:
                         self.sats.pop(i)
