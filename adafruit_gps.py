@@ -137,15 +137,15 @@ class GPS:
             return True
 
         if sentence_type == b"GLL":  # Geographic position - Latitude/Longitude
-            self._parse_gpgll(args)
+            self._parse_gll(args)
         elif sentence_type == b"RMC":  # Minimum location info
-            self._parse_gprmc(args)
+            self._parse_rmc(args)
         elif sentence_type == b"GGA":  # 3D location fix
-            self._parse_gpgga(args)
+            self._parse_gga(args)
         elif sentence_type == b"GSV":  # Satellites in view
-            self._parse_gpgsv(talker, args)
+            self._parse_gsv(talker, args)
         elif sentence_type == b"GSA":  # GPS DOP and active satellites
-            self._parse_gpgsa(talker, args)
+            self._parse_gsa(talker, args)
         return True
 
     def send_command(self, command, add_checksum=True):
@@ -264,7 +264,7 @@ class GPS:
 
         return (data_type[:2], data_type[2:])
 
-    def _parse_gpgll(self, args):
+    def _parse_gll(self, args):
         data = args.split(",")
         if data is None or data[0] is None or (data[0] == ""):
             return  # Unexpected number of params.
@@ -297,7 +297,7 @@ class GPS:
         # Parse data active or void
         self.isactivedata = _parse_str(data[5])
 
-    def _parse_gprmc(self, args):
+    def _parse_rmc(self, args):
         # Parse the arguments (everything after data type) for NMEA GPRMC
         # minimum location fix sentence.
         data = args.split(",")
@@ -376,7 +376,7 @@ class GPS:
                     (year, month, day, 0, 0, 0, 0, 0, -1)
                 )
 
-    def _parse_gpgga(self, args):
+    def _parse_gga(self, args):
         # Parse the arguments (everything after data type) for NMEA GPGGA
         # 3D location fix sentence.
         data = args.split(",")
@@ -425,7 +425,7 @@ class GPS:
         self.altitude_m = _parse_float(data[8])
         self.height_geoid = _parse_float(data[10])
 
-    def _parse_gpgsa(self, talker, args):
+    def _parse_gsa(self, talker, args):
         talker = talker.decode("ascii")
         data = args.split(",")
         if data is None or (data[0] == ""):
@@ -447,7 +447,7 @@ class GPS:
         # Parse VDOP, vertical dilution of precision
         self.vdop = _parse_float(data[-1])
 
-    def _parse_gpgsv(self, talker, args):
+    def _parse_gsv(self, talker, args):
         # Parse the arguments (everything after data type) for NMEA GPGGA
         # pylint: disable=too-many-branches
         # 3D location fix sentence.
