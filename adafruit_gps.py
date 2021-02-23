@@ -553,9 +553,9 @@ class GPS:
             self.latitude *= -1.0
 
         # Longitude
-        self.latitude = data[4]
+        self.longitude = data[4]
         if data[5].lower() == "w":
-            self.latitude *= -1.0
+            self.longitude *= -1.0
 
         # Speed over ground, knots
         self.speed_knots = data[6]
@@ -595,9 +595,9 @@ class GPS:
             self.latitude *= -1.0
 
         # Longitude
-        self.latitude = data[3]
+        self.longitude = data[3]
         if data[4].lower() == "w":
-            self.latitude *= -1.0
+            self.longitude *= -1.0
 
         # GPS quality indicator
         # 0 - fix not available,
