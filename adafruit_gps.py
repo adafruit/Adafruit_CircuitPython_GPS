@@ -90,7 +90,8 @@ class GPS:
         self.height_geoid = None
         self.speed_knots = None
         self.track_angle_deg = None
-        self.sats = None
+        self._sats = None  # Temporary holder for information from GSV messages
+        self.sats = None  # Completed information from GSV messages
         self.isactivedata = None
         self.true_track = None
         self.mag_track = None
@@ -121,16 +122,30 @@ class GPS:
             print(sentence)
         data_type, args = sentence
         data_type = bytes(data_type.upper(), "ascii")
-        # return sentence
-        if data_type in (
-            b"GPGLL",
-            b"GNGLL",
-        ):  # GLL, Geographic Position – Latitude/Longitude
+        (talker, sentence_type) = GPS._parse_talker(data_type)
+
+        # Check for all currently known GNSS talkers
+        # GA - Galileo
+        # GB - BeiDou Systems
+        # GI - NavIC
+        # GL - GLONASS
+        # GP - GPS
+        # GQ - QZSS
+        # GN - GNSS / More than one of the above
+        if talker not in (b"GA", b"GB", b"GI", b"GL", b"GP", b"GQ", b"GN"):
+            # It's not a known GNSS source of data
+            return True
+
+        if sentence_type == b"GLL":  # Geographic position - Latitude/Longitude
             self._parse_gpgll(args)
-        elif data_type in (b"GPRMC", b"GNRMC"):  # RMC, minimum location info
+        elif sentence_type == b"RMC":  # Minimum location info
             self._parse_gprmc(args)
-        elif data_type in (b"GPGGA", b"GNGGA"):  # GGA, 3d location fix
+        elif sentence_type == b"GGA":  # 3D location fix
             self._parse_gpgga(args)
+        elif sentence_type == b"GSV":  # Satellites in view
+            self._parse_gpgsv(talker, args)
+        elif sentence_type == b"GSA":  # GPS DOP and active satellites
+            self._parse_gpgsa(talker, args)
         return True
 
     def send_command(self, command, add_checksum=True):
@@ -240,6 +255,14 @@ class GPS:
             return None  # Invalid sentence, no comma after data type.
         data_type = sentence[1:delimiter]
         return (data_type, sentence[delimiter + 1 :])
+
+    @staticmethod
+    def _parse_talker(data_type):
+        # Split the data_type into talker and sentence_type
+        if data_type[0] == b"P":  # Proprietary codes
+            return (data_type[:1], data_type[1:])
+
+        return (data_type[:2], data_type[2:])
 
     def _parse_gpgll(self, args):
         data = args.split(",")
@@ -402,7 +425,8 @@ class GPS:
         self.altitude_m = _parse_float(data[8])
         self.height_geoid = _parse_float(data[10])
 
-    def _parse_gpgsa(self, args):
+    def _parse_gpgsa(self, talker, args):
+        talker = talker.decode("ascii")
         data = args.split(",")
         if data is None or (data[0] == ""):
             return  # Unexpected number of params
@@ -412,9 +436,9 @@ class GPS:
         # Parse 3d fix
         self.fix_quality_3d = _parse_int(data[1])
         satlist = list(filter(None, data[2:-4]))
-        self.sat_prns = {}
-        for i, sat in enumerate(satlist, 1):
-            self.sat_prns["gps{}".format(i)] = _parse_int(sat)
+        self.sat_prns = []
+        for sat in satlist:
+            self.sat_prns.append("{}{}".format(talker, _parse_int(sat)))
 
         # Parse PDOP, dilution of precision
         self.pdop = _parse_float(data[-3])
@@ -423,9 +447,11 @@ class GPS:
         # Parse VDOP, vertical dilution of precision
         self.vdop = _parse_float(data[-1])
 
-    def _parse_gpgsv(self, args):
+    def _parse_gpgsv(self, talker, args):
         # Parse the arguments (everything after data type) for NMEA GPGGA
+        # pylint: disable=too-many-branches
         # 3D location fix sentence.
+        talker = talker.decode("ascii")
         data = args.split(",")
         if data is None or (data[0] == ""):
             return  # Unexpected number of params.
@@ -442,33 +468,54 @@ class GPS:
 
         sat_tup = data[3:]
 
-        satdict = {}
-        for i in range(len(sat_tup) / 4):
-            j = i * 4
-            key = "gps{}".format(i + (4 * (self.mess_num - 1)))
-            satnum = _parse_int(sat_tup[0 + j])  # Satellite number
-            satdeg = _parse_int(sat_tup[1 + j])  # Elevation in degrees
-            satazim = _parse_int(sat_tup[2 + j])  # Azimuth in degrees
-            satsnr = _parse_int(sat_tup[3 + j])  # signal-to-noise ratio in dB
-            value = (satnum, satdeg, satazim, satsnr)
-            satdict[key] = value
+        satlist = []
+        timestamp = time.monotonic()
+        for i in range(len(sat_tup) // 4):
+            try:
+                j = i * 4
+                value = (
+                    # Satellite number
+                    "{}{}".format(talker, _parse_int(sat_tup[0 + j])),
+                    # Elevation in degrees
+                    _parse_int(sat_tup[1 + j]),
+                    # Azimuth in degrees
+                    _parse_int(sat_tup[2 + j]),
+                    # signal-to-noise ratio in dB
+                    _parse_int(sat_tup[3 + j]),
+                    # Timestamp
+                    timestamp,
+                )
+                satlist.append(value)
+            except ValueError:
+                # Something wasn't an int
+                pass
 
-        if self.sats is None:
-            self.sats = {}
-        for satnum in satdict:
-            self.sats[satnum] = satdict[satnum]
+        if self._sats is None:
+            self._sats = []
+        for value in satlist:
+            self._sats.append(value)
 
-        try:
-            if self.satellites < self.satellites_prev:
-                for i in self.sats:
-                    try:
-                        if int(i[-2]) >= self.satellites:
-                            del self.sats[i]
-                    except ValueError:
-                        if int(i[-1]) >= self.satellites:
-                            del self.sats[i]
-        except TypeError:
-            pass
+        if self.mess_num == self.total_mess_num:
+            # Last part of GSV message
+            if len(self._sats) == self.satellites:
+                # Transfer received satellites to self.sats
+                if self.sats is None:
+                    self.sats = {}
+                else:
+                    # Remove all satellites which haven't
+                    # been seen for 30 seconds
+                    timestamp = time.monotonic()
+                    old = []
+                    for i in self.sats:
+                        sat = self.sats[i]
+                        if (timestamp - sat[4]) > 30:
+                            old.append(i)
+                    for i in old:
+                        self.sats.pop(i)
+                for sat in self._sats:
+                    self.sats[sat[0]] = sat
+            self._sats.clear()
+
         self.satellites_prev = self.satellites
 
 
