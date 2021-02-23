@@ -39,9 +39,9 @@ _SENTENCE_PARAMS = {
     "RMC": (
         "FLOAT",
         "CHAR",
-        "FLOAT",
+        "DEGREES",
         "CHAR",
-        "FLOAT",
+        "DEGREES",
         "CHAR",
         "FLOAT",
         "FLOAT",
