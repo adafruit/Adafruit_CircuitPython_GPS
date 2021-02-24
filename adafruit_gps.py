@@ -678,6 +678,7 @@ class GPS:
 
     def _parse_gsv(self, talker, args):
         # GSV - Satellites in view
+        # pylint: disable=too-many-branches
 
         data = args.split(",")
         if data is None or len(data) not in (7, 11, 15, 19):
@@ -746,6 +747,8 @@ class GPS:
             self._sats.clear()
 
         self.satellites_prev = self.satellites
+
+        return True
 
 
 class GPS_GtopI2C(GPS):
