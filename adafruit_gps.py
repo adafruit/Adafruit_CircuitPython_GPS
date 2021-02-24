@@ -208,21 +208,26 @@ def _parse_talker(data_type):
     return (data_type[:2], data_type[2:])
 
 
-def _parse_data(sentence_type, data):
-    """Parse sentence data for the specified sentence type and return a list of parameters in the correct format, or return None."""
+def _parse_data(sentence_type, data, debug):
+    """Parse sentence data for the specified sentence type and
+    return a list of parameters in the correct format, or return None.
+    """
 
     if sentence_type not in _SENTENCE_PARAMS:
         # The sentence_type is unknown
+        if debug:
+            print(f"DEBUG:GPS: Unknown sentence type:{sentence_type}")
         return None
 
     param_types = _SENTENCE_PARAMS[sentence_type]
 
     if len(param_types) != len(data):
         # The expected number does not match the number of data items
-        print(
-            f"DEBUG:GPS: {sentence_type} len(param_types):{len(param_types)} "
-            f"is not equal to len(data):{len(data)}"
-        )
+        if debug:
+            print(
+                f"DEBUG:GPS: {sentence_type} len(param_types):{len(param_types)} "
+                f"is not equal to len(data):{len(data)}"
+            )
         return None
 
     params = []
@@ -239,6 +244,8 @@ def _parse_data(sentence_type, data):
                 # A single character or Nothing
                 if di is None or len(di) == 0:
                     params.append(None)
+                elif len(di) != 1:
+                    return None
                 else:
                     params.append(di)
             elif pti == "DEGREES":
@@ -318,8 +325,8 @@ class GPS:
         self.total_mess_num = None
         self.mess_num = None
         self._raw_sentence = None
-        self.mode_indicator = None
-        self.magnetic_variation = None
+        self._mode_indicator = None
+        self._magnetic_variation = None
         self.debug = debug
 
     def update(self):
@@ -501,7 +508,7 @@ class GPS:
         data = args.split(",")
         if data is None or len(data) != 7:
             return False  # Unexpected number of params.
-        data = _parse_data("GLL", data)
+        data = _parse_data("GLL", data, self.debug)
         if data is None:
             return False  # Params didn't parse
 
@@ -522,7 +529,7 @@ class GPS:
         self.isactivedata = data[5]
 
         # Parse FAA mode indicator
-        self.mode_indicator = data[6]
+        self._mode_indicator = data[6]
 
         return True
 
@@ -532,7 +539,7 @@ class GPS:
         data = args.split(",")
         if data is None or len(data) != 12:
             return False  # Unexpected number of params.
-        data = _parse_data("RMC", data)
+        data = _parse_data("RMC", data, self.debug)
         if data is None:
             return False  # Params didn't parse
 
@@ -567,12 +574,12 @@ class GPS:
         if data[9] is None or data[10] is None:
             self.magnatic_variation = None
         else:
-            self.magnetic_variation = data[9]
+            self._magnetic_variation = data[9]
             if data[10].lower() == "w":
-                self.magnetic_variation *= -1.0
+                self._magnetic_variation *= -1.0
 
         # Parse FAA mode indicator
-        self.mode_indicator = data[11]
+        self._mode_indicator = data[11]
 
         return True
 
@@ -582,7 +589,7 @@ class GPS:
         data = args.split(",")
         if data is None or len(data) != 14:
             return False  # Unexpected number of params.
-        data = _parse_data("GGA", data)
+        data = _parse_data("GGA", data, self.debug)
         if data is None:
             return False  # Params didn't parse
 
@@ -637,9 +644,9 @@ class GPS:
         if data is None or len(data) not in (17, 18):
             return False  # Unexpected number of params.
         if len(data) == 17:
-            data = _parse_data("GSA", data)
+            data = _parse_data("GSA", data, self.debug)
         else:
-            data = _parse_data("GSA_4_11", data)
+            data = _parse_data("GSA_4_11", data, self.debug)
         if data is None:
             return False  # Params didn't parse
 
@@ -676,7 +683,9 @@ class GPS:
         if data is None or len(data) not in (7, 11, 15, 19):
             return False  # Unexpected number of params.
         data = _parse_data(
-            {7: "GSV7", 11: "GSV11", 15: "GSV15", 19: "GSV19"}[len(data)], data
+            {7: "GSV7", 11: "GSV11", 15: "GSV15", 19: "GSV19"}[len(data)],
+            data,
+            self.debug,
         )
         if data is None:
             return False  # Params didn't parse
