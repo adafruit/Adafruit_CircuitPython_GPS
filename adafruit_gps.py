@@ -572,7 +572,7 @@ class GPS:
 
         # Magnetic variation
         if data[9] is None or data[10] is None:
-            self.magnatic_variation = None
+            self._magnetic_variation = None
         else:
             self._magnetic_variation = data[9]
             if data[10].lower() == "w":
