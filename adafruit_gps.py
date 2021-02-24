@@ -212,6 +212,7 @@ def _parse_data(sentence_type, data, debug):
     """Parse sentence data for the specified sentence type and
     return a list of parameters in the correct format, or return None.
     """
+    # pylint: disable=too-many-branches
 
     if sentence_type not in _SENTENCE_PARAMS:
         # The sentence_type is unknown
@@ -232,54 +233,53 @@ def _parse_data(sentence_type, data, debug):
 
     params = []
     try:
-        for i in range(len(data)):
+        for i, dti in enumerate(data):
             pti = param_types[i]
-            di = data[i]
             if pti == "CHAR":
                 # A single character
-                if len(di) != 1:
+                if len(dti) != 1:
                     return None
-                params.append(di)
+                params.append(dti)
             elif pti == "CHARN":
                 # A single character or Nothing
-                if di is None or len(di) == 0:
+                if dti is None or len(dti) == 0:
                     params.append(None)
-                elif len(di) != 1:
+                elif len(dti) != 1:
                     return None
                 else:
-                    params.append(di)
+                    params.append(dti)
             elif pti == "DEGREES":
                 # A number parseable as degrees
-                params.append(_parse_degrees(di))
+                params.append(_parse_degrees(dti))
             elif pti == "DEGREESN":
                 # A number parseable as degrees or Nothing
-                if di is None or len(di) == 0:
+                if dti is None or len(dti) == 0:
                     params.append(None)
                 else:
-                    params.append(_parse_degrees(di))
+                    params.append(_parse_degrees(dti))
             elif pti == "FLOAT":
                 # A floating point number
-                params.append(_parse_float(di))
+                params.append(_parse_float(dti))
             elif pti == "INT":
                 # An integer
-                params.append(_parse_int(di))
+                params.append(_parse_int(dti))
             elif pti == "INTN":
                 # An integer or Nothing
-                if di is None or len(di) == 0:
+                if dti is None or len(dti) == 0:
                     params.append(None)
                 else:
-                    params.append(_parse_int(di))
+                    params.append(_parse_int(dti))
             elif pti == "STR":
                 # A string
-                params.append(di)
+                params.append(dti)
             elif pti == "STRN":
                 # A string or Nothing
-                if di is None or len(di) == 0:
+                if dti is None or len(dti) == 0:
                     params.append(None)
                 else:
-                    params.append(di)
+                    params.append(dti)
             else:
-                raise TypeError(f"Unexpected parameter type '{pti}'")
+                raise TypeError(f"GPS: Unexpected parameter type '{pti}'")
     except ValueError:
         # Something didn't parse, abort
         return None
@@ -336,6 +336,7 @@ class GPS:
         """
         # Grab a sentence and check its data type to call the appropriate
         # parsing function.
+
         try:
             sentence = self._parse_sentence()
         except UnicodeError:
@@ -361,18 +362,19 @@ class GPS:
             # Assume it's a valid packet anyway
             return True
 
+        result = True
         if sentence_type == b"GLL":  # Geographic position - Latitude/Longitude
-            return self._parse_gll(args)
+            result = self._parse_gll(args)
         elif sentence_type == b"RMC":  # Minimum location info
-            return self._parse_rmc(args)
+            result = self._parse_rmc(args)
         elif sentence_type == b"GGA":  # 3D location fix
-            return self._parse_gga(args)
+            result = self._parse_gga(args)
         elif sentence_type == b"GSV":  # Satellites in view
-            return self._parse_gsv(talker, args)
+            result = self._parse_gsv(talker, args)
         elif sentence_type == b"GSA":  # GPS DOP and active satellites
-            return self._parse_gsa(talker, args)
-        else:
-            return True
+            result = self._parse_gsa(talker, args)
+
+        return result
 
     def send_command(self, command, add_checksum=True):
         """Send a command string to the GPS.  If add_checksum is True (the
