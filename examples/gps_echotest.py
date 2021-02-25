@@ -4,6 +4,9 @@
 # Simple GPS module demonstration.
 # Will print NMEA sentences received from the GPS, great for testing connection
 # Uses the GPS to send some commands, then reads directly from the GPS
+
+# pylint: disable=duplicate-code
+
 import time
 import board
 import busio

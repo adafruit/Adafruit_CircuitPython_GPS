@@ -4,6 +4,9 @@
 # Simple GPS module demonstration.
 # Will wait for a fix and print a message every second with the current location
 # and other details.
+
+# pylint: disable=duplicate-code
+
 import time
 import board
 import busio
