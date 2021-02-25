@@ -5,6 +5,8 @@
 # The GPS timestamps are available without a fix and keep the track of
 # time while there is powersource (ie coin cell battery)
 
+# pylint: disable=duplicate-code
+
 import time
 import board
 import busio
