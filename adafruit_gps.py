@@ -265,6 +265,7 @@ class GPS:
             return True
 
         result = True
+        args = args.split(",")
         if sentence_type == b"GLL":  # Geographic position - Latitude/Longitude
             result = self._parse_gll(args)
         elif sentence_type == b"RMC":  # Minimum location info
@@ -406,10 +407,9 @@ class GPS:
             (year, month, day, hours, mins, secs, 0, 0, -1)
         )
 
-    def _parse_gll(self, args):
+    def _parse_gll(self, data):
         # GLL - Geographic Position - Latitude/Longitude
 
-        data = args.split(",")
         if data is None or len(data) != 7:
             return False  # Unexpected number of params.
         data = _parse_data(_GLL, data)
@@ -433,10 +433,9 @@ class GPS:
 
         return True
 
-    def _parse_rmc(self, args):
+    def _parse_rmc(self, data):
         # RMC - Recommended Minimum Navigation Information
 
-        data = args.split(",")
         if data is None or len(data) != 12:
             return False  # Unexpected number of params.
         data = _parse_data(_RMC, data)
@@ -477,10 +476,9 @@ class GPS:
 
         return True
 
-    def _parse_gga(self, args):
+    def _parse_gga(self, data):
         # GGA - Global Positioning System Fix Data
 
-        data = args.split(",")
         if data is None or len(data) != 14:
             return False  # Unexpected number of params.
         data = _parse_data(_GGA, data)
@@ -527,10 +525,9 @@ class GPS:
 
         return True
 
-    def _parse_gsa(self, talker, args):
+    def _parse_gsa(self, talker, data):
         # GSA - GPS DOP and active satellites
 
-        data = args.split(",")
         if data is None or len(data) not in (17, 18):
             return False  # Unexpected number of params.
         if len(data) == 17:
@@ -566,11 +563,10 @@ class GPS:
 
         return True
 
-    def _parse_gsv(self, talker, args):
+    def _parse_gsv(self, talker, data):
         # GSV - Satellites in view
         # pylint: disable=too-many-branches
 
-        data = args.split(",")
         if data is None or len(data) not in (7, 11, 15, 19):
             return False  # Unexpected number of params.
         data = _parse_data(
