@@ -34,138 +34,38 @@ __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_GPS.git"
 
 _GPSI2C_DEFAULT_ADDRESS = const(0x10)
 
-_SENTENCE_PARAMS = {
-    "GLL": ("DEGREES", "CHAR", "DEGREES", "CHAR", "FLOAT", "CHAR", "CHARN"),
-    "RMC": (
-        "FLOAT",
-        "CHAR",
-        "DEGREES",
-        "CHAR",
-        "DEGREES",
-        "CHAR",
-        "FLOAT",
-        "FLOAT",
-        "INT",
-        "DEGREESN",
-        "CHARN",
-        "CHARN",
-    ),
-    "GGA": (
-        "FLOAT",
-        "DEGREES",
-        "CHAR",
-        "DEGREES",
-        "CHAR",
-        "INT",
-        "INT",
-        "FLOAT",
-        "FLOAT",
-        "STR",
-        "FLOAT",
-        "STR",
-        "INTN",
-        "STRN",
-    ),
-    "GSA": (
-        "CHAR",
-        "INT",
-        "INTN",
-        "INTN",
-        "INTN",
-        "INTN",
-        "INTN",
-        "INTN",
-        "INTN",
-        "INTN",
-        "INTN",
-        "INTN",
-        "INTN",
-        "INTN",
-        "FLOAT",
-        "FLOAT",
-        "FLOAT",
-    ),
-    "GSA_4_11": (  # NMEA 4.11 - Nov 2018
-        "CHAR",
-        "INT",
-        "INTN",
-        "INTN",
-        "INTN",
-        "INTN",
-        "INTN",
-        "INTN",
-        "INTN",
-        "INTN",
-        "INTN",
-        "INTN",
-        "INTN",
-        "INTN",
-        "FLOAT",
-        "FLOAT",
-        "FLOAT",
-        "STRN",
-    ),
-    "GSV7": (
-        "INT",
-        "INT",
-        "INT",
-        "INT",
-        "INT",
-        "INT",
-        "INTN",
-    ),
-    "GSV11": (
-        "INT",
-        "INT",
-        "INT",
-        "INT",
-        "INT",
-        "INT",
-        "INTN",
-        "INT",
-        "INT",
-        "INT",
-        "INTN",
-    ),
-    "GSV15": (
-        "INT",
-        "INT",
-        "INT",
-        "INT",
-        "INT",
-        "INT",
-        "INTN",
-        "INT",
-        "INT",
-        "INT",
-        "INTN",
-        "INT",
-        "INT",
-        "INT",
-        "INTN",
-    ),
-    "GSV19": (
-        "INT",
-        "INT",
-        "INT",
-        "INT",
-        "INT",
-        "INT",
-        "INTN",
-        "INT",
-        "INT",
-        "INT",
-        "INTN",
-        "INT",
-        "INT",
-        "INT",
-        "INTN",
-        "INT",
-        "INT",
-        "INT",
-        "INTN",
-    ),
-}
+_GLL = 0
+_RMC = 1
+_GGA = 2
+_GSA = 3
+_GSA_4_11 = 4
+_GSV7 = 5
+_GSV11 = 6
+_GSV15 = 7
+_GSV19 = 8
+_ST_MIN = _GLL
+_ST_MAX = _GSV19
+
+_SENTENCE_PARAMS = (
+    # 0 - _GLL
+    "dcdcfcC",
+    # 1 - _RMC
+    "fcdcdcffiDCC",
+    # 2 - _GGA
+    "fdcdciiffsfsIS",
+    # 3 - _GSA
+    "ciIIIIIIIIIIIIfff",
+    # 4 - _GSA_4_11
+    "ciIIIIIIIIIIIIfffS",
+    # 5 - _GSV7
+    "iiiiiiI",
+    # 6 - _GSV11
+    "iiiiiiIiiiI",
+    # 7 - _GSV15
+    "iiiiiiIiiiIiiiI",
+    # 8 - _GSV19
+    "iiiiiiIiiiIiiiIiiiI",
+)
 
 
 # Internal helper parsing functions.
@@ -200,6 +100,13 @@ def _parse_str(nmea_data):
     return str(nmea_data)
 
 
+def _read_degrees(data, index, neg):
+    x = data[index]
+    if data[index + 1].lower() == neg:
+        x *= -1.0
+    return x
+
+
 def _parse_talker(data_type):
     # Split the data_type into talker and sentence_type
     if data_type[0] == b"P":  # Proprietary codes
@@ -208,73 +115,68 @@ def _parse_talker(data_type):
     return (data_type[:2], data_type[2:])
 
 
-def _parse_data(sentence_type, data, debug):
+def _parse_data(sentence_type, data):
     """Parse sentence data for the specified sentence type and
     return a list of parameters in the correct format, or return None.
     """
     # pylint: disable=too-many-branches
 
-    if sentence_type not in _SENTENCE_PARAMS:
+    if not _ST_MIN <= sentence_type <= _ST_MAX:
         # The sentence_type is unknown
-        if debug:
-            print(f"DEBUG:GPS: Unknown sentence type:{sentence_type}")
         return None
 
     param_types = _SENTENCE_PARAMS[sentence_type]
 
     if len(param_types) != len(data):
         # The expected number does not match the number of data items
-        if debug:
-            print(
-                f"DEBUG:GPS: {sentence_type} len(param_types):{len(param_types)} "
-                f"is not equal to len(data):{len(data)}"
-            )
         return None
 
     params = []
     try:
         for i, dti in enumerate(data):
             pti = param_types[i]
-            if pti == "CHAR":
+            len_dti = len(dti)
+            nothing = dti is None or len_dti == 0
+            if pti == "c":
                 # A single character
-                if len(dti) != 1:
+                if len_dti != 1:
                     return None
                 params.append(dti)
-            elif pti == "CHARN":
+            elif pti == "C":
                 # A single character or Nothing
-                if dti is None or len(dti) == 0:
+                if nothing:
                     params.append(None)
-                elif len(dti) != 1:
+                elif len_dti != 1:
                     return None
                 else:
                     params.append(dti)
-            elif pti == "DEGREES":
+            elif pti == "d":
                 # A number parseable as degrees
                 params.append(_parse_degrees(dti))
-            elif pti == "DEGREESN":
+            elif pti == "D":
                 # A number parseable as degrees or Nothing
-                if dti is None or len(dti) == 0:
+                if nothing:
                     params.append(None)
                 else:
                     params.append(_parse_degrees(dti))
-            elif pti == "FLOAT":
+            elif pti == "f":
                 # A floating point number
                 params.append(_parse_float(dti))
-            elif pti == "INT":
+            elif pti == "i":
                 # An integer
                 params.append(_parse_int(dti))
-            elif pti == "INTN":
+            elif pti == "I":
                 # An integer or Nothing
-                if dti is None or len(dti) == 0:
+                if nothing:
                     params.append(None)
                 else:
                     params.append(_parse_int(dti))
-            elif pti == "STR":
+            elif pti == "s":
                 # A string
                 params.append(dti)
-            elif pti == "STRN":
+            elif pti == "S":
                 # A string or Nothing
-                if dti is None or len(dti) == 0:
+                if nothing:
                     params.append(None)
                 else:
                     params.append(dti)
@@ -510,19 +412,15 @@ class GPS:
         data = args.split(",")
         if data is None or len(data) != 7:
             return False  # Unexpected number of params.
-        data = _parse_data("GLL", data, self.debug)
+        data = _parse_data(_GLL, data)
         if data is None:
             return False  # Params didn't parse
 
         # Latitude
-        self.latitude = data[0]
-        if data[1].lower() == "s":
-            self.latitude *= -1.0
+        self.latitude = _read_degrees(data, 0, "s")
 
         # Longitude
-        self.longitude = data[2]
-        if data[3].lower() == "w":
-            self.longitude *= -1.0
+        self.longitude = _read_degrees(data, 2, "w")
 
         # UTC time of position
         self._update_timestamp_utc(int(data[4]))
@@ -541,7 +439,7 @@ class GPS:
         data = args.split(",")
         if data is None or len(data) != 12:
             return False  # Unexpected number of params.
-        data = _parse_data("RMC", data, self.debug)
+        data = _parse_data(_RMC, data)
         if data is None:
             return False  # Params didn't parse
 
@@ -557,14 +455,10 @@ class GPS:
             self.fix_quality = 0
 
         # Latitude
-        self.latitude = data[2]
-        if data[3].lower() == "s":
-            self.latitude *= -1.0
+        self.latitude = _read_degrees(data, 2, "s")
 
         # Longitude
-        self.longitude = data[4]
-        if data[5].lower() == "w":
-            self.longitude *= -1.0
+        self.longitude = _read_degrees(data, 4, "w")
 
         # Speed over ground, knots
         self.speed_knots = data[6]
@@ -576,9 +470,7 @@ class GPS:
         if data[9] is None or data[10] is None:
             self._magnetic_variation = None
         else:
-            self._magnetic_variation = data[9]
-            if data[10].lower() == "w":
-                self._magnetic_variation *= -1.0
+            self._magnetic_variation = _read_degrees(data, 9, "w")
 
         # Parse FAA mode indicator
         self._mode_indicator = data[11]
@@ -591,7 +483,7 @@ class GPS:
         data = args.split(",")
         if data is None or len(data) != 14:
             return False  # Unexpected number of params.
-        data = _parse_data("GGA", data, self.debug)
+        data = _parse_data(_GGA, data)
         if data is None:
             return False  # Params didn't parse
 
@@ -599,14 +491,10 @@ class GPS:
         self._update_timestamp_utc(int(data[0]))
 
         # Latitude
-        self.latitude = data[1]
-        if data[2].lower() == "s":
-            self.latitude *= -1.0
+        self.latitude = _read_degrees(data, 1, "s")
 
         # Longitude
-        self.longitude = data[3]
-        if data[4].lower() == "w":
-            self.longitude *= -1.0
+        self.longitude = _read_degrees(data, 3, "w")
 
         # GPS quality indicator
         # 0 - fix not available,
@@ -646,9 +534,9 @@ class GPS:
         if data is None or len(data) not in (17, 18):
             return False  # Unexpected number of params.
         if len(data) == 17:
-            data = _parse_data("GSA", data, self.debug)
+            data = _parse_data(_GSA, data)
         else:
-            data = _parse_data("GSA_4_11", data, self.debug)
+            data = _parse_data(_GSA_4_11, data)
         if data is None:
             return False  # Params didn't parse
 
@@ -686,9 +574,8 @@ class GPS:
         if data is None or len(data) not in (7, 11, 15, 19):
             return False  # Unexpected number of params.
         data = _parse_data(
-            {7: "GSV7", 11: "GSV11", 15: "GSV15", 19: "GSV19"}[len(data)],
+            {7: _GSV7, 11: _GSV11, 15: _GSV15, 19: _GSV19}[len(data)],
             data,
-            self.debug,
         )
         if data is None:
             return False  # Params didn't parse
@@ -780,7 +667,7 @@ class GPS_GtopI2C(GPS):
                 # 'stuffed' newlines and then append to our result array for byteification
                 i2c.readinto(self._charbuff)
                 char = self._charbuff[0]
-                if (char == ord("\n")) and (self._lastbyte != ord("\r")):
+                if (char == 0x0A) and (self._lastbyte != 0x0D):
                     continue  # skip duplicate \n's!
                 result.append(char)
                 self._lastbyte = char  # keep track of the last character approved
@@ -804,14 +691,14 @@ class GPS_GtopI2C(GPS):
         timeout = time.monotonic() + self._timeout
         while timeout > time.monotonic():
             # check if our internal buffer has a '\n' termination already
-            if self._internalbuffer and (self._internalbuffer[-1] == ord("\n")):
+            if self._internalbuffer and (self._internalbuffer[-1] == 0x0A):
                 break
             char = self.read(1)
             if not char:
                 continue
             self._internalbuffer.append(char[0])
             # print(bytearray(self._internalbuffer))
-        if self._internalbuffer and self._internalbuffer[-1] == ord("\n"):
+        if self._internalbuffer and self._internalbuffer[-1] == 0x0A:
             ret = bytearray(self._internalbuffer)
             self._internalbuffer = []  # reset the buffer to empty
             return ret
