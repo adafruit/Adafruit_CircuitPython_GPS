@@ -10,9 +10,6 @@
 #  MUST carefully follow the steps in this guide to enable writes to the
 # internal filesystem:
 #  https://learn.adafruit.com/adafruit-ultimate-gps-featherwing/circuitpython-library
-
-# pylint: disable=duplicate-code
-
 import board
 import busio
 import adafruit_gps

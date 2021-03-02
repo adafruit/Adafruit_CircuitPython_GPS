@@ -5,19 +5,17 @@
 # The GPS timestamps are available without a fix and keep the track of
 # time while there is powersource (ie coin cell battery)
 
-# pylint: disable=duplicate-code
-
 import time
 import board
 import busio
 import rtc
 import adafruit_gps
 
-# uart = busio.UART(board.TX, board.RX, baudrate=9600, timeout=10)
-i2c = busio.I2C(board.SCL, board.SDA)
+uart = busio.UART(board.TX, board.RX, baudrate=9600, timeout=10)
+# i2c = busio.I2C(board.SCL, board.SDA)
 
-# gps = adafruit_gps.GPS(uart, debug=False)
-gps = adafruit_gps.GPS_GtopI2C(i2c, debug=False)  # Use I2C interface
+gps = adafruit_gps.GPS(uart, debug=False)
+# gps = adafruit_gps.GPS_GtopI2C(i2c, debug=False)  # Use I2C interface
 
 gps.send_command(b"PMTK314,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0")
 gps.send_command(b"PMTK220,1000")

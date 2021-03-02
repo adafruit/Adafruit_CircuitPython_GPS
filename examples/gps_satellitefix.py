@@ -1,8 +1,6 @@
 # SPDX-FileCopyrightText: 2021 lesamouraipourpre
 # SPDX-License-Identifier: MIT
 
-# pylint: disable=duplicate-code
-
 import time
 import board
 
