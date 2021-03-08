@@ -24,6 +24,18 @@ print("Set GPS as time source")
 rtc.set_time_source(gps)
 the_rtc = rtc.RTC()
 
+
+def _format_datetime(datetime):
+    return "{:02}/{:02}/{} {:02}:{:02}:{:02}".format(
+        datetime.tm_mon,
+        datetime.tm_mday,
+        datetime.tm_year,
+        datetime.tm_hour,
+        datetime.tm_min,
+        datetime.tm_sec,
+    )
+
+
 last_print = time.monotonic()
 while True:
 
@@ -36,39 +48,12 @@ while True:
             print("No time data from GPS yet")
             continue
         # Time & date from GPS informations
-        print(
-            "Fix timestamp: {:02}/{:02}/{} {:02}:{:02}:{:02}".format(
-                gps.timestamp_utc.tm_mon,  # Grab parts of the time from the
-                gps.timestamp_utc.tm_mday,  # struct_time object that holds
-                gps.timestamp_utc.tm_year,  # the fix time.  Note you might
-                gps.timestamp_utc.tm_hour,  # not get all data like year, day,
-                gps.timestamp_utc.tm_min,  # month!
-                gps.timestamp_utc.tm_sec,
-            )
-        )
+        print("Fix timestamp: {}".format(_format_datetime(gps.timestamp_utc)))
 
         # Time & date from internal RTC
-        print(
-            "RTC timestamp: {:02}/{:02}/{} {:02}:{:02}:{:02}".format(
-                the_rtc.datetime.tm_mon,
-                the_rtc.datetime.tm_mday,
-                the_rtc.datetime.tm_year,
-                the_rtc.datetime.tm_hour,
-                the_rtc.datetime.tm_min,
-                the_rtc.datetime.tm_sec,
-            )
-        )
+        print("RTC timestamp: {}".format(_format_datetime(the_rtc.datetime)))
 
         # Time & date from time.localtime() function
         local_time = time.localtime()
 
-        print(
-            "Local time: {:02}/{:02}/{} {:02}:{:02}:{:02}".format(
-                local_time.tm_mon,
-                local_time.tm_mday,
-                local_time.tm_year,
-                local_time.tm_hour,
-                local_time.tm_min,
-                local_time.tm_sec,
-            )
-        )
+        print("Local time: {}".format(_format_datetime(local_time)))
