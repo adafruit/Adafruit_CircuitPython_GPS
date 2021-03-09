@@ -32,3 +32,4 @@ repos:
         entry: /usr/bin/env bash -c
         args: ['([[ ! -d "examples" ]] || for example in $(find . -path "./examples/*.py"); do pylint --disable=missing-docstring,invalid-name $example; done)']
         language: system
+        
