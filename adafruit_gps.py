@@ -9,7 +9,7 @@
 GPS parsing module.  Can parse simple NMEA data sentences from serial GPS
 modules to read latitude, longitude, and more.
 
-* Author(s): Tony DiCola
+* Author(s): Tony DiCola, James Carr
 
 Implementation Notes
 --------------------

@@ -1,6 +1,11 @@
 # SPDX-FileCopyrightText: 2021 lesamouraipourpre
 # SPDX-License-Identifier: MIT
 
+# This example uses GSA and GSV sentences from the GPS device to report on the
+# quality of the received data from the satellites.
+# * GSA - DOP(Dilution of Precision) and active satellites
+# * GSV - Satellites in view
+
 import time
 import board
 

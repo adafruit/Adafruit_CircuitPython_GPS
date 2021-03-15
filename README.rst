@@ -1,4 +1,3 @@
-
 Introduction
 ============
 
@@ -14,8 +13,8 @@ Introduction
     :target: https://github.com/adafruit/Adafruit_CircuitPython_GPS/actions/
     :alt: Build Status
 
-GPS parsing module.  Can parse simple NMEA data sentences from serial GPS
-modules to read latitude, longitude, and more.
+GPS parsing module.  Can send commands to, and parse simple NMEA data sentences
+from serial and I2C GPS modules to read latitude, longitude, and more.
 
 
 Dependencies
@@ -115,72 +114,10 @@ These two lines are the lines that actually solve the issue:
     print('Longitude: {0:.6f} degrees'.format(gps.longitude))
 
 
-Note: Sending multiple PMTK314 packets with gps.send_command() will not work unless there is a substantial amount of time in-between each time gps.send_command() is called. A time.sleep() of 1 second or more should fix this.
-
-About NMEA Data
-===============
-This GPS module uses the NMEA 0183 protocol.
-
-This data is formatted by the GPS in one of two ways.
-
-The first of these is GGA. GGA has more or less everything you need.
-
-Here's an explanation of GGA:
-::
-
-                                                        11
-           1         2       3 4        5 6 7  8   9  10 |  12 13  14   15
-           |         |       | |        | | |  |   |   | |   | |   |    |
-    $--GGA,hhmmss.ss,llll.ll,a,yyyyy.yy,a,x,xx,x.x,x.x,M,x.x,M,x.x,xxxx*hh
-
-
-1. Time (UTC)
-2. Latitude
-3. N or S (North or South)
-4. Longitude
-5. E or W (East or West)
-6. GPS Quality Indicator,
-
-   * 0 - fix not available,
-   * 1 - GPS fix,
-   * 2 - Differential GPS fix
-
-7. Number of satellites in view, 00 - 12
-8. Horizontal Dilution of precision
-9. Antenna Altitude above/below mean-sea-level (geoid)
-10. Units of antenna altitude, meters
-11. Geoidal separation, the difference between the WGS-84 earth ellipsoid and mean-sea-level (geoid), "-" means mean-sea-level below ellipsoid
-12. Units of geoidal separation, meters
-13. Age of differential GPS data, time in seconds since last SC104 type 1 or 9 update, null field when DGPS is not used
-14. Differential reference station ID, 0000-1023
-15. Checksum
-
-The second of these is RMC. RMC is Recommended Minimum Navigation Information.
-
-Here's an explanation of RMC:
-::
-
-                                                               12
-           1         2 3       4 5        6 7   8   9   10   11|
-           |         | |       | |        | |   |   |    |   | |
-    $--RMC,hhmmss.ss,A,llll.ll,a,yyyyy.yy,a,x.x,x.x,xxxx,x.x,a*hh
-
-1. Time (UTC)
-2. Status, V = Navigation receiver warning
-3. Latitude
-4. N or S
-5. Longitude
-6. E or W
-7. Speed over ground, knots
-8. Track made good, degrees true
-9. Date, ddmmyy
-10. Magnetic Variation, degrees
-11. E or W
-12. Checksum
-
-
-`Info about NMEA taken from here
-<https://www.tronico.fi/OH6NT/docs/NMEA0183.pdf>`_.
+Note: Sending multiple PMTK314 packets with ``gps.send_command()`` will not
+work unless there is a substantial amount of time in-between each time
+``gps.send_command()`` is called. A ``time.sleep()`` of 1 second or more
+should fix this.
 
 Contributing
 ============

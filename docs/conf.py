@@ -35,8 +35,8 @@ master_doc = "index"
 
 # General information about the project.
 project = "Adafruit GPS Library"
-copyright = "2017 Tony DiCola"
-author = "Tony DiCola"
+copyright = "2017 Tony DiCola, 2021 James Carr"
+author = "Tony DiCola, James Carr"
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
