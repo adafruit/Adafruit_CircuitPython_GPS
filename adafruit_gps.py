@@ -248,6 +248,8 @@ class GPS:
         if self.debug:
             print(sentence)
         data_type, args = sentence
+        if len(data_type) < 5:
+            return False
         data_type = bytes(data_type.upper(), "ascii")
         (talker, sentence_type) = _parse_talker(data_type)
 
