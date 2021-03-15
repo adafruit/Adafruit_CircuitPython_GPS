@@ -8,6 +8,7 @@ Table of Contents
     :hidden:
 
     self
+    details
 
 .. toctree::
     :caption: Examples
@@ -23,11 +24,17 @@ Table of Contents
 .. toctree::
     :caption: Tutorials
 
+    Adafruit Ultimate GPS <https://learn.adafruit.com/adafruit-ultimate-gps>
+    Adafruit Ultimate GPS featherwing <https://learn.adafruit.com/adafruit-ultimate-gps-featherwing>
+    Adafruit Mini GPS module <https://learn.adafruit.com/adafruit-mini-gps-pa1010d-module>
+    GPS Tour Guide <https://learn.adafruit.com/gps-tour-guide>
+
 .. toctree::
     :caption: Related Products
 
     Adafruit Ultimate GPS Breakout <https://www.adafruit.com/product/746>
     Adafruit Ultimate GPS FeatherWing <https://www.adafruit.com/product/3133>
+    Adafruit Mini GPS module <https://www.adafruit.com/product/4415>
 
 .. toctree::
     :caption: Other Links
