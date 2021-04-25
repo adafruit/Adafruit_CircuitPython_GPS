@@ -1,4 +1,5 @@
 # SPDX-FileCopyrightText: 2017 Tony DiCola for Adafruit Industries
+# SPDX-FileCopyrightText: 2021 James Carr
 #
 # SPDX-License-Identifier: MIT
 
@@ -344,8 +345,8 @@ class GPS:
         # pylint: disable=len-as-condition
         # This needs to be refactored when it can be tested.
 
-        # Only continue if we have at least 32 bytes in the input buffer
-        if self.in_waiting < 32:
+        # Only continue if we have at least 11 bytes in the input buffer
+        if self.in_waiting < 11:
             return None
 
         sentence = self.readline()
@@ -679,9 +680,9 @@ class GPS_GtopI2C(GPS):
 
     @property
     def in_waiting(self):
-        """Returns number of bytes available in UART read buffer, always 32
+        """Returns number of bytes available in UART read buffer, always 16
         since I2C does not have the ability to know how much data is available"""
-        return 32
+        return 16
 
     def readline(self):
         """Returns a newline terminated bytearray, must have timeout set for
