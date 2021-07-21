@@ -232,7 +232,7 @@ class GPS:
         self._magnetic_variation = None
         self.debug = debug
 
-    def update(self):
+    def update(self, sentence=None):
         """Check for updated data from the GPS module and process it
         accordingly.  Returns True if new data was processed, and False if
         nothing new was received.
@@ -241,7 +241,7 @@ class GPS:
         # parsing function.
 
         try:
-            sentence = self._parse_sentence()
+            sentence = self._parse_sentence(sentence)
         except UnicodeError:
             return None
         if sentence is None:
@@ -340,16 +340,17 @@ class GPS:
         the underlying UART or this will block forever!"""
         return self._uart.readline()
 
-    def _read_sentence(self):
+    def _read_sentence(self, sentence=None):
         # Parse any NMEA sentence that is available.
         # pylint: disable=len-as-condition
         # This needs to be refactored when it can be tested.
 
         # Only continue if we have at least 11 bytes in the input buffer
-        if self.in_waiting < 11:
+        if self.in_waiting < 11 and sentence is None:
             return None
 
-        sentence = self.readline()
+        if sentence is None:
+            sentence = self.readline()
         if sentence is None or sentence == b"" or len(sentence) < 1:
             return None
         try:
@@ -373,8 +374,8 @@ class GPS:
         # At this point we don't have a valid sentence
         return None
 
-    def _parse_sentence(self):
-        sentence = self._read_sentence()
+    def _parse_sentence(self, sentence=None):
+        sentence = self._read_sentence(sentence)
 
         # sentence is a valid NMEA with a valid checksum
         if sentence is None:
