@@ -96,4 +96,4 @@ while True:
         if gps.horizontal_dilution is not None:
             print("Horizontal dilution: {}".format(gps.horizontal_dilution))
         if gps.height_geoid is not None:
-            print("Height geo ID: {} meters".format(gps.height_geoid))
+            print("Height geoid: {} meters".format(gps.height_geoid))
