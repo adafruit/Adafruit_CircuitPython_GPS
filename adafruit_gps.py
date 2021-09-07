@@ -44,8 +44,9 @@ _GSV7 = 5
 _GSV11 = 6
 _GSV15 = 7
 _GSV19 = 8
+_RMC_4_1 = 9
 _ST_MIN = _GLL
-_ST_MAX = _GSV19
+_ST_MAX = _RMC_4_1
 
 _SENTENCE_PARAMS = (
     # 0 - _GLL
@@ -66,6 +67,8 @@ _SENTENCE_PARAMS = (
     "iiiiiiIiiiIiiiI",
     # 8 - _GSV19
     "iiiiiiIiiiIiiiIiiiI",
+    # 9 - _RMC_4_1
+    "fcdcdcffiDCCC",
 )
 
 
@@ -439,9 +442,9 @@ class GPS:
     def _parse_rmc(self, data):
         # RMC - Recommended Minimum Navigation Information
 
-        if data is None or len(data) != 12:
+        if data is None or len(data) not in (12, 13):
             return False  # Unexpected number of params.
-        data = _parse_data(_RMC, data)
+        data = _parse_data({12: _RMC, 13: _RMC_4_1}[len(data)], data)
         if data is None:
             return False  # Params didn't parse
 
