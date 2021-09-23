@@ -446,6 +446,7 @@ class GPS:
             return False  # Unexpected number of params.
         data = _parse_data({12: _RMC, 13: _RMC_4_1}[len(data)], data)
         if data is None:
+            self.fix_quality = 0
             return False  # Params didn't parse
 
         # UTC time of position and date
@@ -489,6 +490,7 @@ class GPS:
             return False  # Unexpected number of params.
         data = _parse_data(_GGA, data)
         if data is None:
+            self.fix_quality = 0
             return False  # Params didn't parse
 
         # UTC time of position
@@ -541,6 +543,7 @@ class GPS:
         else:
             data = _parse_data(_GSA_4_11, data)
         if data is None:
+            self.fix_quality_3d = 0
             return False  # Params didn't parse
 
         talker = talker.decode("ascii")
