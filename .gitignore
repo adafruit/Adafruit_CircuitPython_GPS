@@ -13,3 +13,5 @@ bundles
 .eggs
 dist
 **/*.egg-info
+.tox
+.coverage
