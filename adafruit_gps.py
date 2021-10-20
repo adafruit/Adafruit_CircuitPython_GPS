@@ -653,7 +653,9 @@ class GPS_GtopI2C(GPS):
     def __init__(
         self, i2c_bus, *, address=_GPSI2C_DEFAULT_ADDRESS, debug=False, timeout=5
     ):
-        import adafruit_bus_device.i2c_device as i2c_device  # pylint: disable=import-outside-toplevel
+        from adafruit_bus_device import (  # pylint: disable=import-outside-toplevel
+            i2c_device,
+        )
 
         super().__init__(None, debug)  # init the parent with no UART
         self._i2c = i2c_device.I2CDevice(i2c_bus, address)
