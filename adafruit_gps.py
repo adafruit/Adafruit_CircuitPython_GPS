@@ -113,7 +113,7 @@ def _read_degrees(data, index, neg):
 
 def _parse_talker(data_type):
     # Split the data_type into talker and sentence_type
-    if data_type[0] == b"P":  # Proprietary codes
+    if data_type[:1] == b"P":  # Proprietary codes
         return (data_type[:1], data_type[1:])
 
     return (data_type[:2], data_type[2:])
