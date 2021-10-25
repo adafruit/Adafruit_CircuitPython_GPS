@@ -119,6 +119,11 @@ work unless there is a substantial amount of time in-between each time
 ``gps.send_command()`` is called. A ``time.sleep()`` of 1 second or more
 should fix this.
 
+Documentation
+=============
+
+API documentation for this library can be found on `Read the Docs <https://circuitpython.readthedocs.io/projects/gps/en/latest/>`_.
+
 Contributing
 ============
 
