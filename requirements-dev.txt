@@ -1,0 +1,7 @@
+# SPDX-FileCopyrightText: 2021 Jonas Kittner
+#
+# SPDX-License-Identifier: Unlicense
+covdefaults
+coverage
+freezegun
+pytest

@@ -50,6 +50,10 @@ jobs:
     - name: Pre-commit hooks
       run: |
         pre-commit run --all-files
+    - name: run tests
+      run: |
+        pip install --upgrade tox
+        tox -e py
     - name: Build assets
       run: circuitpython-build-bundles --filename_prefix ${{ steps.repo-name.outputs.repo-name }} --library_location .
     - name: Archive bundles
