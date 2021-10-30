@@ -557,7 +557,7 @@ class GPS:
         satlist = list(filter(None, data[2:-4]))
         self.sat_prns = []
         for sat in satlist:
-            self.sat_prns.append("{talker}{sat}")
+            self.sat_prns.append(f"{talker}{sat}")
 
         # PDOP, dilution of precision
         self.pdop = _parse_float(data[14])
