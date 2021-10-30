@@ -298,7 +298,7 @@ class GPS:
             for char in command:
                 checksum ^= char
             self.write(b"*")
-            self.write(bytes(f"{checksum:02x}".upper(), "ascii"))
+            self.write(bytes("{:02x}".format(checksum).upper(), "ascii"))
         self.write(b"\r\n")
 
     @property
@@ -557,7 +557,7 @@ class GPS:
         satlist = list(filter(None, data[2:-4]))
         self.sat_prns = []
         for sat in satlist:
-            self.sat_prns.append(f"{talker}{sat}")
+            self.sat_prns.append("{}{}".format(talker, sat))
 
         # PDOP, dilution of precision
         self.pdop = _parse_float(data[14])
@@ -602,7 +602,7 @@ class GPS:
             j = i * 4
             value = (
                 # Satellite number
-                f"{talker}{sat_tup[0 + j]}",
+                "{}{}".format(talker, sat_tup[0 + j]),
                 # Elevation in degrees
                 sat_tup[1 + j],
                 # Azimuth in degrees
