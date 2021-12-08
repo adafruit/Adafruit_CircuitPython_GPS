@@ -50,11 +50,11 @@ _ST_MAX = _RMC_4_1
 
 _SENTENCE_PARAMS = (
     # 0 - _GLL
-    "dcdcfcC",
+    "dcdcscC",
     # 1 - _RMC
-    "fcdcdcffiDCC",
+    "scdcdcffsDCC",
     # 2 - _GGA
-    "fdcdciiffsfsIS",
+    "sdcdciiffsfsIS",
     # 3 - _GSA
     "ciIIIIIIIIIIIIfff",
     # 4 - _GSA_4_11
@@ -68,7 +68,7 @@ _SENTENCE_PARAMS = (
     # 8 - _GSV19
     "iiiiiiIiiiIiiiIiiiI",
     # 9 - _RMC_4_1
-    "fcdcdcffiDCCC",
+    "scdcdcffsDCCC",
 )
 
 
@@ -394,9 +394,9 @@ class GPS:
         return (data_type, sentence[delimiter + 1 :])
 
     def _update_timestamp_utc(self, time_utc, date=None):
-        hours = time_utc // 10000
-        mins = (time_utc // 100) % 100
-        secs = time_utc % 100
+        hours = int(time_utc[0:2])
+        mins = int(time_utc[2:4])
+        secs = int(time_utc[4:6])
         if date is None:
             if self.timestamp_utc is None:
                 day, month, year = 0, 0, 0
@@ -405,9 +405,9 @@ class GPS:
                 month = self.timestamp_utc.tm_mon
                 year = self.timestamp_utc.tm_year
         else:
-            day = date // 10000
-            month = (date // 100) % 100
-            year = 2000 + date % 100
+            day = int(date[0:2])
+            month = int(date[2:4])
+            year = 2000 + int(date[4:6])
 
         self.timestamp_utc = time.struct_time(
             (year, month, day, hours, mins, secs, 0, 0, -1)
@@ -429,7 +429,7 @@ class GPS:
         self.longitude = _read_degrees(data, 2, "w")
 
         # UTC time of position
-        self._update_timestamp_utc(int(data[4]))
+        self._update_timestamp_utc(data[4])
 
         # Status Valid(A) or Invalid(V)
         self.isactivedata = data[5]
@@ -450,7 +450,7 @@ class GPS:
             return False  # Params didn't parse
 
         # UTC time of position and date
-        self._update_timestamp_utc(int(data[0]), data[8])
+        self._update_timestamp_utc(data[0], data[8])
 
         # Status Valid(A) or Invalid(V)
         self.isactivedata = data[1]
@@ -494,7 +494,7 @@ class GPS:
             return False  # Params didn't parse
 
         # UTC time of position
-        self._update_timestamp_utc(int(data[0]))
+        self._update_timestamp_utc(data[0])
 
         # Latitude
         self.latitude = _read_degrees(data, 1, "s")
