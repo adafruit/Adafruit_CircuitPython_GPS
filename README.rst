@@ -2,7 +2,7 @@ Introduction
 ============
 
 .. image:: https://readthedocs.org/projects/adafruit-circuitpython-gps/badge/?version=latest
-    :target: https://circuitpython.readthedocs.io/projects/gps/en/latest/
+    :target: https://docs.circuitpython.org/projects/gps/en/latest/
     :alt: Documentation Status
 
 .. image :: https://img.shields.io/discord/327254708534116352.svg
@@ -122,7 +122,7 @@ should fix this.
 Documentation
 =============
 
-API documentation for this library can be found on `Read the Docs <https://circuitpython.readthedocs.io/projects/gps/en/latest/>`_.
+API documentation for this library can be found on `Read the Docs <https://docs.circuitpython.org/projects/gps/en/latest/>`_.
 
 Contributing
 ============
