@@ -546,7 +546,7 @@ class GPS:
             self.fix_quality_3d = 0
             return False  # Params didn't parse
 
-        talker = talker.decode("ascii")
+        talker = str(talker, 'ascii')
 
         # Selection mode: 'M' - manual, 'A' - automatic
         self.sel_mode = data[0]
@@ -585,7 +585,7 @@ class GPS:
         if data is None:
             return False  # Params didn't parse
 
-        talker = talker.decode("ascii")
+        talker = str(talker, 'ascii')
 
         # Number of messages
         self.total_mess_num = data[0]
