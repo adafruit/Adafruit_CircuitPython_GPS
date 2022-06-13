@@ -21,9 +21,9 @@ from adafruit_gps import GPS
 @pytest.mark.parametrize(
     ("val", "exp"),
     (
-        pytest.param("0023.456", 0.390933, id="leading zero"),
-        pytest.param("6413.9369", 64.23228, id="regular value"),
-        pytest.param("2747.416122087989", 27.79027, id="long value"),
+        pytest.param("0023.456", 390933, id="leading zero"),
+        pytest.param("6413.9369", 64232281, id="regular value"),
+        pytest.param("2747.416122087989", 27790268, id="long value"),
     ),
 )
 def test_parse_degrees(val, exp):
