@@ -85,9 +85,9 @@ def _parse_degrees(nmea_data):
     # this into a float or separate parts to retain the precision
     raw = nmea_data.split(".")
     deg = int(raw[0]) // 100 * 1000000  # the ddd
-    minutes = int(raw[0]) % 100 * 10000  # the mm.
-    minutes += int(raw[1])  # the .mmmm
-    minutes = int(minutes / 60 * 100)
+    minutes = int(raw[0]) % 100  # the mm.
+    minutes += int(f"{raw[1][:4]:0<4}") / 10000  # the .mmmm
+    minutes = int(minutes / 60 * 1000000)
     return deg + minutes
 
 
