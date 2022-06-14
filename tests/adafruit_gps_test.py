@@ -61,10 +61,10 @@ def test_parse_float_invalid(val):
 @pytest.mark.parametrize(
     ("data", "neg", "exp"),
     (
-        pytest.param([27.79027, "S"], "s", -27.79027, id="south negative"),
-        pytest.param([64.23228, "N"], "s", 64.23228, id="north not negative"),
-        pytest.param([123.4567, "W"], "w", -123.4567, id="west negative"),
-        pytest.param([10.7891, "E"], "w", 10.7891, id="east not negative"),
+        pytest.param([27790270, "S"], "s", -27.79027, id="south negative"),
+        pytest.param([64232280, "N"], "s", 64.23228, id="north not negative"),
+        pytest.param([123456700, "W"], "w", -123.4567, id="west negative"),
+        pytest.param([10789100, "E"], "w", 10.7891, id="east not negative"),
     ),
 )
 def test_read_degrees(data, neg, exp):
