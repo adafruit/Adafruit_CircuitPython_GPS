@@ -86,7 +86,8 @@ def _parse_degrees(nmea_data):
     raw = nmea_data.split(".")
     deg = int(raw[0]) // 100 * 1000000  # the ddd
     minutes = int(raw[0]) % 100  # the mm.
-    minutes += int(f"{raw[1][:4]:0<4}") / 10000  # the .mmmm
+    tmp = raw[1][:4]  # mpy-cross wont compile if this is directly in the next line
+    minutes += int(f"{tmp:0<4}") / 10000
     minutes = int(minutes / 60 * 1000000)
     return deg + minutes
 
