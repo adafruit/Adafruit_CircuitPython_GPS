@@ -29,14 +29,24 @@ LOG_MODE = "ab"
 # lines to import the necessary library and initialize the SD card:
 # NOT for use with a single board computer like Raspberry Pi!
 """
-import adafruit_sdcard
-import digitalio
+# Comment out if your board doesn't support sdcardio
+import sdcardio
+
+# Uncomment if your board doesn't support sdcardio
+#import adafruit_sdcard
+#import digitalio
+
 import storage
 
 SD_CS_PIN = board.D10  # CS for SD card using Adalogger Featherwing
 spi = busio.SPI(board.SCK, MOSI=board.MOSI, MISO=board.MISO)
-sd_cs = digitalio.DigitalInOut(SD_CS_PIN)
-sdcard = adafruit_sdcard.SDCard(spi, sd_cs)
+# Comment out if your board doesn't support sdcardio
+sdcard = sdcardio.SDCard(spi, SD_CS_PIN)
+
+# Uncomment if your board doesn't support sdcardio
+#sd_cs = digitalio.DigitalInOut(SD_CS_PIN)
+#sdcard = adafruit_sdcard.SDCard(spi, sd_cs)
+
 vfs = storage.VfsFat(sdcard)
 storage.mount(vfs, '/sd')    # Mount SD card under '/sd' path in filesystem.
 LOG_FILE = '/sd/gps.txt'     # Example for writing to SD card path /sd/gps.txt
