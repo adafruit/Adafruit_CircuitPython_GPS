@@ -10,6 +10,8 @@
 #  MUST carefully follow the steps in this guide to enable writes to the
 # internal filesystem:
 #  https://learn.adafruit.com/adafruit-ultimate-gps-featherwing/circuitpython-library
+import sys
+
 import board
 import busio
 import adafruit_gps
@@ -25,22 +27,29 @@ LOG_FILE = "gps.txt"  # Example for writing to internal path gps.txt
 # like to erase the file and start clean each time use the value 'wb' instead.
 LOG_MODE = "ab"
 
-# If writing to SD card on a microcontroller customize and uncomment these
-# lines to import the necessary library and initialize the SD card:
-# NOT for use with a single board computer like Raspberry Pi!
-"""
-import adafruit_sdcard
-import digitalio
-import storage
+# sdcardio and adafruit_sdcard are NOT supported on blinka. If you are using a
+# Raspberry Pi or other single-board linux computer, the code will save the
+# output to the path defined in LOG_FILE above.
+if sys.platform != "linux":
+    import storage
 
-SD_CS_PIN = board.D10  # CS for SD card using Adalogger Featherwing
-spi = busio.SPI(board.SCK, MOSI=board.MOSI, MISO=board.MISO)
-sd_cs = digitalio.DigitalInOut(SD_CS_PIN)
-sdcard = adafruit_sdcard.SDCard(spi, sd_cs)
-vfs = storage.VfsFat(sdcard)
-storage.mount(vfs, '/sd')    # Mount SD card under '/sd' path in filesystem.
-LOG_FILE = '/sd/gps.txt'     # Example for writing to SD card path /sd/gps.txt
-"""
+    SD_CS_PIN = board.D10  # CS for SD card using Adalogger Featherwing
+    try:
+        import sdcardio
+
+        sdcard = sdcardio.SDCard(board.SPI, SD_CS_PIN)
+    except ImportError:
+        import adafruit_sdcard
+        import digitalio
+
+        sdcard = adafruit_sdcard.SDCard(
+            board.SPI(),
+            digitalio.DigitalInOut(SD_CS_PIN),
+        )
+
+    vfs = storage.VfsFat(sdcard)
+    storage.mount(vfs, "/sd")  # Mount SD card under '/sd' path in filesystem.
+    LOG_FILE = "/sd/gps.txt"  # Example for writing to SD card path /sd/gps.txt
 
 # Create a serial connection for the GPS connection using default speed and
 # a slightly higher timeout (GPS modules typically update once a second).
