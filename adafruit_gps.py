@@ -84,12 +84,11 @@ def _parse_degrees(nmea_data):
     # Return the final value as an integer. Further functions can parse
     # this into a float or separate parts to retain the precision
     raw = nmea_data.split(".")
-    deg = int(raw[0]) // 100 * 1000000  # the ddd
+    degrees = int(raw[0]) // 100 * 1000000  # the ddd
     minutes = int(raw[0]) % 100  # the mm.
-    tmp = raw[1][:4]  # mpy-cross wont compile if this is directly in the next line
-    minutes += int(f"{tmp:0<4}") / 10000
+    minutes += int(f"{raw[1][:4]:0<4}") / 10000
     minutes = int(minutes / 60 * 1000000)
-    return deg + minutes
+    return degrees + minutes  # return parsed string in the format dddmmmmmm
 
 
 def _parse_int(nmea_data):
@@ -118,7 +117,7 @@ def _read_degrees(data, index, neg):
     return x
 
 
-def _read_int_degress(data, index, neg):
+def _read_int_degrees(data, index, neg):
     deg = data[index] // 1000000
     minutes = data[index] % 1000000 / 10000
     if data[index + 1].lower() == neg:
@@ -443,11 +442,11 @@ class GPS:
 
         # Latitude
         self.latitude = _read_degrees(data, 0, "s")
-        self.latitude_degrees, self.latitude_minutes = _read_int_degress(data, 0, "s")
+        self.latitude_degrees, self.latitude_minutes = _read_int_degrees(data, 0, "s")
 
         # Longitude
         self.longitude = _read_degrees(data, 2, "w")
-        self.longitude_degrees, self.longitude_minutes = _read_int_degress(data, 2, "w")
+        self.longitude_degrees, self.longitude_minutes = _read_int_degrees(data, 2, "w")
 
         # UTC time of position
         self._update_timestamp_utc(data[4])
@@ -483,11 +482,11 @@ class GPS:
 
         # Latitude
         self.latitude = _read_degrees(data, 2, "s")
-        self.latitude_degrees, self.latitude_minutes = _read_int_degress(data, 2, "s")
+        self.latitude_degrees, self.latitude_minutes = _read_int_degrees(data, 2, "s")
 
         # Longitude
         self.longitude = _read_degrees(data, 4, "w")
-        self.longitude_degrees, self.longitude_minutes = _read_int_degress(data, 4, "w")
+        self.longitude_degrees, self.longitude_minutes = _read_int_degrees(data, 4, "w")
 
         # Speed over ground, knots
         self.speed_knots = data[6]
@@ -521,11 +520,11 @@ class GPS:
 
         # Latitude
         self.latitude = _read_degrees(data, 1, "s")
-        self.latitude_degrees, self.latitude_minutes = _read_int_degress(data, 1, "s")
+        self.latitude_degrees, self.latitude_minutes = _read_int_degrees(data, 1, "s")
 
         # Longitude
         self.longitude = _read_degrees(data, 3, "w")
-        self.longitude_degrees, self.longitude_minutes = _read_int_degress(data, 3, "w")
+        self.longitude_degrees, self.longitude_minutes = _read_int_degrees(data, 3, "w")
 
         # GPS quality indicator
         # 0 - fix not available,
