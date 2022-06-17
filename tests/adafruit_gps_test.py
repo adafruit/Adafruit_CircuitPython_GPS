@@ -21,9 +21,9 @@ from adafruit_gps import GPS
 @pytest.mark.parametrize(
     ("val", "exp"),
     (
-        pytest.param("0023.456", 0.390933, id="leading zero"),
-        pytest.param("6413.9369", 64.23228, id="regular value"),
-        pytest.param("2747.416122087989", 27.79027, id="long value"),
+        pytest.param("0023.456", 390933, id="leading zero"),
+        pytest.param("6413.9369", 64232281, id="regular value"),
+        pytest.param("2747.416122087989", 27790268, id="long value"),
     ),
 )
 def test_parse_degrees(val, exp):
@@ -61,10 +61,10 @@ def test_parse_float_invalid(val):
 @pytest.mark.parametrize(
     ("data", "neg", "exp"),
     (
-        pytest.param([27.79027, "S"], "s", -27.79027, id="south negative"),
-        pytest.param([64.23228, "N"], "s", 64.23228, id="north not negative"),
-        pytest.param([123.4567, "W"], "w", -123.4567, id="west negative"),
-        pytest.param([10.7891, "E"], "w", 10.7891, id="east not negative"),
+        pytest.param([27790270, "S"], "s", -27.79027, id="south negative"),
+        pytest.param([64232280, "N"], "s", 64.23228, id="north not negative"),
+        pytest.param([123456700, "W"], "w", -123.4567, id="west negative"),
+        pytest.param([10789100, "E"], "w", 10.7891, id="east not negative"),
     ),
 )
 def test_read_degrees(data, neg, exp):

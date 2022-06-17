@@ -80,10 +80,15 @@ def _parse_degrees(nmea_data):
     # Where ddd is the degrees, mm.mmmm is the minutes.
     if nmea_data is None or len(nmea_data) < 3:
         return None
-    raw = float(nmea_data)
-    deg = raw // 100
-    minutes = raw % 100
-    return deg + minutes / 60
+    # To avoid losing precision handle degrees and minutes separately
+    # Return the final value as an integer. Further functions can parse
+    # this into a float or separate parts to retain the precision
+    raw = nmea_data.split(".")
+    degrees = int(raw[0]) // 100 * 1000000  # the ddd
+    minutes = int(raw[0]) % 100  # the mm.
+    minutes += int(f"{raw[1][:4]:0<4}") / 10000
+    minutes = int(minutes / 60 * 1000000)
+    return degrees + minutes  # return parsed string in the format dddmmmmmm
 
 
 def _parse_int(nmea_data):
@@ -105,10 +110,19 @@ def _parse_str(nmea_data):
 
 
 def _read_degrees(data, index, neg):
-    x = data[index]
+    # This function loses precision with float32
+    x = data[index] / 1000000
     if data[index + 1].lower() == neg:
         x *= -1.0
     return x
+
+
+def _read_int_degrees(data, index, neg):
+    deg = data[index] // 1000000
+    minutes = data[index] % 1000000 / 10000
+    if data[index + 1].lower() == neg:
+        deg *= -1
+    return (deg, minutes)
 
 
 def _parse_talker(data_type):
@@ -208,7 +222,11 @@ class GPS:
         # Initialize null starting values for GPS attributes.
         self.timestamp_utc = None
         self.latitude = None
+        self.latitude_degrees = None
+        self.latitude_minutes = None  # Use for full precision minutes
         self.longitude = None
+        self.longitude_degrees = None
+        self.longitude_minutes = None  # Use for full precision minutes
         self.fix_quality = 0
         self.fix_quality_3d = 0
         self.satellites = None
@@ -424,9 +442,11 @@ class GPS:
 
         # Latitude
         self.latitude = _read_degrees(data, 0, "s")
+        self.latitude_degrees, self.latitude_minutes = _read_int_degrees(data, 0, "s")
 
         # Longitude
         self.longitude = _read_degrees(data, 2, "w")
+        self.longitude_degrees, self.longitude_minutes = _read_int_degrees(data, 2, "w")
 
         # UTC time of position
         self._update_timestamp_utc(data[4])
@@ -462,9 +482,11 @@ class GPS:
 
         # Latitude
         self.latitude = _read_degrees(data, 2, "s")
+        self.latitude_degrees, self.latitude_minutes = _read_int_degrees(data, 2, "s")
 
         # Longitude
         self.longitude = _read_degrees(data, 4, "w")
+        self.longitude_degrees, self.longitude_minutes = _read_int_degrees(data, 4, "w")
 
         # Speed over ground, knots
         self.speed_knots = data[6]
@@ -498,9 +520,11 @@ class GPS:
 
         # Latitude
         self.latitude = _read_degrees(data, 1, "s")
+        self.latitude_degrees, self.latitude_minutes = _read_int_degrees(data, 1, "s")
 
         # Longitude
         self.longitude = _read_degrees(data, 3, "w")
+        self.longitude_degrees, self.longitude_minutes = _read_int_degrees(data, 3, "w")
 
         # GPS quality indicator
         # 0 - fix not available,
