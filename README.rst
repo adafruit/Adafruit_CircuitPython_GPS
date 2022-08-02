@@ -13,6 +13,10 @@ Introduction
     :target: https://github.com/adafruit/Adafruit_CircuitPython_GPS/actions/
     :alt: Build Status
 
+.. image:: https://img.shields.io/badge/code%20style-black-000000.svg
+    :target: https://github.com/psf/black
+    :alt: Code Style: Black
+
 GPS parsing module.  Can send commands to, and parse simple NMEA data sentences
 from serial and I2C GPS modules to read latitude, longitude, and more.
 
