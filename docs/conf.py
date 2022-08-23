@@ -36,7 +36,8 @@ master_doc = "index"
 
 # General information about the project.
 project = "Adafruit GPS Library"
-copyright = "2017 Tony DiCola, 2021 James Carr"
+current_year = str(datetime.datetime.now().year)
+copyright = current_year + " Tony DiCola, James Carr"
 author = "Tony DiCola, James Carr"
 
 # The version info for the project you're documenting, acts as replacement for
