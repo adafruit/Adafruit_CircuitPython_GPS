@@ -29,6 +29,14 @@ Implementation Notes
 import time
 from micropython import const
 
+try:
+    from typing import Optional, Tuple, List
+    from typing_extensions import Literal
+    from circuitpython_typing import ReadableBuffer
+    from busio import UART, I2C
+except ImportError:
+    pass
+
 __version__ = "0.0.0+auto.0"
 __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_GPS.git"
 
@@ -75,7 +83,7 @@ _SENTENCE_PARAMS = (
 # Internal helper parsing functions.
 # These handle input that might be none or null and return none instead of
 # throwing errors.
-def _parse_degrees(nmea_data):
+def _parse_degrees(nmea_data: str) -> int:
     # Parse a NMEA lat/long data pair 'dddmm.mmmm' into a pure degrees value.
     # Where ddd is the degrees, mm.mmmm is the minutes.
     if nmea_data is None or len(nmea_data) < 3:
@@ -91,25 +99,25 @@ def _parse_degrees(nmea_data):
     return degrees + minutes  # return parsed string in the format dddmmmmmm
 
 
-def _parse_int(nmea_data):
+def _parse_int(nmea_data: str) -> int:
     if nmea_data is None or nmea_data == "":
         return None
     return int(nmea_data)
 
 
-def _parse_float(nmea_data):
+def _parse_float(nmea_data: str) -> float:
     if nmea_data is None or nmea_data == "":
         return None
     return float(nmea_data)
 
 
-def _parse_str(nmea_data):
+def _parse_str(nmea_data: str) -> str:
     if nmea_data is None or nmea_data == "":
         return None
     return str(nmea_data)
 
 
-def _read_degrees(data, index, neg):
+def _read_degrees(data: List[float], index: int, neg: str) -> float:
     # This function loses precision with float32
     x = data[index] / 1000000
     if data[index + 1].lower() == neg:
@@ -117,7 +125,7 @@ def _read_degrees(data, index, neg):
     return x
 
 
-def _read_int_degrees(data, index, neg):
+def _read_int_degrees(data: List[float], index: int, neg: str) -> float:
     deg = data[index] // 1000000
     minutes = data[index] % 1000000 / 10000
     if data[index + 1].lower() == neg:
@@ -125,7 +133,7 @@ def _read_int_degrees(data, index, neg):
     return (deg, minutes)
 
 
-def _parse_talker(data_type):
+def _parse_talker(data_type: bytes) -> Tuple[bytes, bytes]:
     # Split the data_type into talker and sentence_type
     if data_type[:1] == b"P":  # Proprietary codes
         return (data_type[:1], data_type[1:])
@@ -133,7 +141,7 @@ def _parse_talker(data_type):
     return (data_type[:2], data_type[2:])
 
 
-def _parse_data(sentence_type, data):
+def _parse_data(sentence_type: int, data: List[str]) -> Optional[List]:
     """Parse sentence data for the specified sentence type and
     return a list of parameters in the correct format, or return None.
     """
@@ -217,7 +225,7 @@ class GPS:
     GPS modules to read latitude, longitude, and more.
     """
 
-    def __init__(self, uart, debug=False):
+    def __init__(self, uart: UART, debug: bool = False) -> None:
         self._uart = uart
         # Initialize null starting values for GPS attributes.
         self.timestamp_utc = None
@@ -253,7 +261,7 @@ class GPS:
         self._magnetic_variation = None
         self.debug = debug
 
-    def update(self):
+    def update(self) -> bool:
         """Check for updated data from the GPS module and process it
         accordingly.  Returns True if new data was processed, and False if
         nothing new was received.
@@ -303,7 +311,7 @@ class GPS:
 
         return result
 
-    def send_command(self, command, add_checksum=True):
+    def send_command(self, command: bytes, add_checksum: bool = True) -> None:
         """Send a command string to the GPS.  If add_checksum is True (the
         default) a NMEA checksum will automatically be computed and added.
         Note you should NOT add the leading $ and trailing * to the command
@@ -320,48 +328,48 @@ class GPS:
         self.write(b"\r\n")
 
     @property
-    def has_fix(self):
+    def has_fix(self) -> bool:
         """True if a current fix for location information is available."""
         return self.fix_quality is not None and self.fix_quality >= 1
 
     @property
-    def has_3d_fix(self):
+    def has_3d_fix(self) -> bool:
         """Returns true if there is a 3d fix available.
         use has_fix to determine if a 2d fix is available,
         passing it the same data"""
         return self.fix_quality_3d is not None and self.fix_quality_3d >= 2
 
     @property
-    def datetime(self):
+    def datetime(self) -> Optional[time.struct_time]:
         """Return struct_time object to feed rtc.set_time_source() function"""
         return self.timestamp_utc
 
     @property
-    def nmea_sentence(self):
+    def nmea_sentence(self) -> Optional[str]:
         """Return raw_sentence which is the raw NMEA sentence read from the GPS"""
         return self._raw_sentence
 
-    def read(self, num_bytes):
+    def read(self, num_bytes: Optional[int]) -> Optional[bytes]:
         """Read up to num_bytes of data from the GPS directly, without parsing.
-        Returns a bytearray with up to num_bytes or None if nothing was read"""
+        Returns a bytestring with up to num_bytes or None if nothing was read"""
         return self._uart.read(num_bytes)
 
-    def write(self, bytestr):
+    def write(self, bytestr: ReadableBuffer) -> Optional[int]:
         """Write a bytestring data to the GPS directly, without parsing
         or checksums"""
         return self._uart.write(bytestr)
 
     @property
-    def in_waiting(self):
+    def in_waiting(self) -> int:
         """Returns number of bytes available in UART read buffer"""
         return self._uart.in_waiting
 
-    def readline(self):
-        """Returns a newline terminated bytearray, must have timeout set for
+    def readline(self) -> Optional[bytes]:
+        """Returns a newline terminated bytestring, must have timeout set for
         the underlying UART or this will block forever!"""
         return self._uart.readline()
 
-    def _read_sentence(self):
+    def _read_sentence(self) -> Optional[str]:
         # Parse any NMEA sentence that is available.
         # pylint: disable=len-as-condition
         # This needs to be refactored when it can be tested.
@@ -394,7 +402,7 @@ class GPS:
         # At this point we don't have a valid sentence
         return None
 
-    def _parse_sentence(self):
+    def _parse_sentence(self) -> Optional[Tuple[str, str]]:
         sentence = self._read_sentence()
 
         # sentence is a valid NMEA with a valid checksum
@@ -411,7 +419,7 @@ class GPS:
         data_type = sentence[1:delimiter]
         return (data_type, sentence[delimiter + 1 :])
 
-    def _update_timestamp_utc(self, time_utc, date=None):
+    def _update_timestamp_utc(self, time_utc: str, date: Optional[str] = None) -> None:
         hours = int(time_utc[0:2])
         mins = int(time_utc[2:4])
         secs = int(time_utc[4:6])
@@ -431,7 +439,7 @@ class GPS:
             (year, month, day, hours, mins, secs, 0, 0, -1)
         )
 
-    def _parse_gll(self, data):
+    def _parse_gll(self, data: List[str]) -> bool:
         # GLL - Geographic Position - Latitude/Longitude
 
         if data is None or len(data) != 7:
@@ -459,7 +467,7 @@ class GPS:
 
         return True
 
-    def _parse_rmc(self, data):
+    def _parse_rmc(self, data: List[str]) -> bool:
         # RMC - Recommended Minimum Navigation Information
 
         if data is None or len(data) not in (12, 13):
@@ -505,7 +513,7 @@ class GPS:
 
         return True
 
-    def _parse_gga(self, data):
+    def _parse_gga(self, data: List[str]) -> bool:
         # GGA - Global Positioning System Fix Data
 
         if data is None or len(data) != 14:
@@ -557,7 +565,7 @@ class GPS:
 
         return True
 
-    def _parse_gsa(self, talker, data):
+    def _parse_gsa(self, talker: bytes, data: List[str]) -> bool:
         # GSA - GPS DOP and active satellites
 
         if data is None or len(data) not in (17, 18):
@@ -596,7 +604,7 @@ class GPS:
 
         return True
 
-    def _parse_gsv(self, talker, data):
+    def _parse_gsv(self, talker: bytes, data: List[str]) -> bool:
         # GSV - Satellites in view
         # pylint: disable=too-many-branches
 
@@ -675,8 +683,13 @@ class GPS_GtopI2C(GPS):
     """
 
     def __init__(
-        self, i2c_bus, *, address=_GPSI2C_DEFAULT_ADDRESS, debug=False, timeout=5
-    ):
+        self,
+        i2c_bus: I2C,
+        *,
+        address: int = _GPSI2C_DEFAULT_ADDRESS,
+        debug: bool = False,
+        timeout: float = 5,
+    ) -> None:
         from adafruit_bus_device import (  # pylint: disable=import-outside-toplevel
             i2c_device,
         )
@@ -688,7 +701,7 @@ class GPS_GtopI2C(GPS):
         self._internalbuffer = []
         self._timeout = timeout
 
-    def read(self, num_bytes=1):
+    def read(self, num_bytes: int = 1) -> bytearray:
         """Read up to num_bytes of data from the GPS directly, without parsing.
         Returns a bytearray with up to num_bytes or None if nothing was read"""
         result = []
@@ -704,19 +717,19 @@ class GPS_GtopI2C(GPS):
                 self._lastbyte = char  # keep track of the last character approved
         return bytearray(result)
 
-    def write(self, bytestr):
+    def write(self, bytestr: ReadableBuffer) -> None:
         """Write a bytestring data to the GPS directly, without parsing
         or checksums"""
         with self._i2c as i2c:
             i2c.write(bytestr)
 
     @property
-    def in_waiting(self):
+    def in_waiting(self) -> Literal[16]:
         """Returns number of bytes available in UART read buffer, always 16
         since I2C does not have the ability to know how much data is available"""
         return 16
 
-    def readline(self):
+    def readline(self) -> Optional[bytearray]:
         """Returns a newline terminated bytearray, must have timeout set for
         the underlying UART or this will block forever!"""
         timeout = time.monotonic() + self._timeout
