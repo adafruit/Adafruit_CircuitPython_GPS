@@ -688,7 +688,7 @@ class GPS_GtopI2C(GPS):
         *,
         address: int = _GPSI2C_DEFAULT_ADDRESS,
         debug: bool = False,
-        timeout: float = 5,
+        timeout: float = 5.0,
     ) -> None:
         from adafruit_bus_device import (  # pylint: disable=import-outside-toplevel
             i2c_device,
