@@ -125,7 +125,7 @@ def _read_degrees(data: List[float], index: int, neg: str) -> float:
     return x
 
 
-def _read_int_degrees(data: List[float], index: int, neg: str) -> float:
+def _read_int_degrees(data: List[float], index: int, neg: str) -> Tuple[int, float]:
     deg = data[index] // 1000000
     minutes = data[index] % 1000000 / 10000
     if data[index + 1].lower() == neg:
