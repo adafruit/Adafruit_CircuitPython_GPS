@@ -96,7 +96,7 @@ def _parse_degrees(nmea_data: str) -> int:
     minutes = int(raw[0]) % 100  # the mm.
     minutes += int(f"{raw[1][:4]:0<4}") / 10000
     minutes = int(minutes / 60 * 1000000)
-    return degrees + minutes  # return parsed string in the format dddmmmmmm
+    return degrees + minutes
 
 
 def _parse_int(nmea_data: str) -> int:
