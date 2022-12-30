@@ -229,6 +229,7 @@ class GPS:
         self._uart = uart
         # Initialize null starting values for GPS attributes.
         self.timestamp_utc = None
+        self.antenna = (None, None)  # Antenna status (current, last).
         self.latitude = None
         self.latitude_degrees = None
         self.latitude_minutes = None  # Use for full precision minutes
@@ -291,10 +292,12 @@ class GPS:
         # GP - GPS
         # GQ - QZSS
         # GN - GNSS / More than one of the above
+        # PG - Status of antenna extension (added by Pierre Lepage)
         if talker not in (b"GA", b"GB", b"GI", b"GL", b"GP", b"GQ", b"GN"):
             # It's not a known GNSS source of data
             # Assume it's a valid packet anyway
-            return True
+            # False: PGTOP. Status of antenna extension.  Added by Pierre Lepage.
+            return True if data_type[:5] != b"PGTOP" else self._parse_pgtop(args)
 
         result = True
         args = args.split(",")
@@ -676,6 +679,17 @@ class GPS:
 
         return True
 
+    def _parse_pgtop(self, data) -> int:
+        # Added by Pierre Lepage.
+        if data is None or len(data) != 4:
+            return False
+
+        # Antenna status. 1: Antenna shorted. 2: Internal antenna. 3: Active (extension) antenna.
+        # User can detect change in antenna status by testing equality between item 0 and item 1 of tuple.
+        # User is responsible to acknowledge change in the antenna status by making self.antenna[1] same as item 0.
+        self.antenna = (data[3], self.antenna[1])
+        return True
+
 
 class GPS_GtopI2C(GPS):
     """GTop-compatible I2C GPS parsing module.  Can parse simple NMEA data
@@ -747,3 +761,4 @@ class GPS_GtopI2C(GPS):
             self._internalbuffer = []  # reset the buffer to empty
             return ret
         return None  # no completed data yet
+
