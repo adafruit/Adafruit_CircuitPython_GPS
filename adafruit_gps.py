@@ -292,11 +292,11 @@ class GPS:
         # GP - GPS
         # GQ - QZSS
         # GN - GNSS / More than one of the above
-        # PG - Status of antenna extension (added by Pierre Lepage)
+        # PG - Status of antenna extension
         if talker not in (b"GA", b"GB", b"GI", b"GL", b"GP", b"GQ", b"GN"):
             # It's not a known GNSS source of data
             # Assume it's a valid packet anyway
-            # False: PGTOP. Status of antenna extension.  Added by Pierre Lepage.
+            # False: PGTOP. Status of antenna extension.
             return True if data_type[:5] != b"PGTOP" else self._parse_pgtop(args)
 
         result = True
@@ -690,7 +690,6 @@ class GPS:
         self.antenna = (data[3], self.antenna[1])
         return True
 
-
 class GPS_GtopI2C(GPS):
     """GTop-compatible I2C GPS parsing module.  Can parse simple NMEA data
     sentences from an I2C-capable GPS module to read latitude, longitude, and more.
@@ -761,4 +760,3 @@ class GPS_GtopI2C(GPS):
             self._internalbuffer = []  # reset the buffer to empty
             return ret
         return None  # no completed data yet
-
