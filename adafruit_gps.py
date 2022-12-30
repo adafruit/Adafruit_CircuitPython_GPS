@@ -297,7 +297,7 @@ class GPS:
             # It's not a known GNSS source of data
             # Assume it's a valid packet anyway
             # False: PGTOP. Status of antenna extension.
-            return True if data_type[:5] != b"PGTOP" else self._parse_pgtop(args)
+            return True if not data_type.endswith(b"PGTOP") else self._parse_pgtop(args)
 
         result = True
         args = args.split(",")
@@ -685,10 +685,12 @@ class GPS:
             return False
 
         # Antenna status. 1: Antenna shorted. 2: Internal antenna. 3: Active (extension) antenna.
-        # User can detect change in antenna status by testing equality between item 0 and item 1 of tuple.
-        # User is responsible to acknowledge change in the antenna status by making self.antenna[1] same as item 0.
+        # User can detect change in antenna status by testing equality between item 0 and item 1 of
+        # tuple. User is responsible to acknowledge change in the antenna status by making
+        # self.antenna[1] same as item 0.
         self.antenna = (data[3], self.antenna[1])
         return True
+
 
 class GPS_GtopI2C(GPS):
     """GTop-compatible I2C GPS parsing module.  Can parse simple NMEA data
