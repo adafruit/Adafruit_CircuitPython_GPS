@@ -229,7 +229,25 @@ class GPS:
         self._uart = uart
         # Initialize null starting values for GPS attributes.
         self.timestamp_utc = None
-        self.antenna = (None, None)  # Antenna status (current, last).
+        self.__antenna_advisor = (
+            False  # Control the antenna advisor mechanism of the PA6H chip.
+        )
+        self.__antenna_actual = (
+            None  # Actual status acknowledge of the external antenna.
+        )
+        self.__antenna_last = None  # Last status acknowledge of the external antenna.
+        self.__antenna_change = False
+        self.__antenna_instant_status = None  # Status of antenna as currently read.
+        self.__antenna_ack_delay = (
+            5  # Time (sec.) to wait between automatic acknowledge.
+        )
+        self.__antenna_ack_time = time.monotonic()
+        self.__antenna_ack = (
+            False  # False: initialize a new delay. True: delay is in way.
+        )
+        self.__antenna_ack = (
+            False  # False: initialize a new delay. True: delay is in way.
+        )
         self.latitude = None
         self.latitude_degrees = None
         self.latitude_minutes = None  # Use for full precision minutes
@@ -329,6 +347,118 @@ class GPS:
             self.write(b"*")
             self.write(bytes("{:02x}".format(checksum).upper(), "ascii"))
         self.write(b"\r\n")
+
+    @property
+    def antenna_advisor(self):
+        """
+        new_state True: Force the PA6H to emit continuously the active antenna status.
+        new_state False: Stop the antenna advisor.
+        """
+        return self.__antenna_advisor
+
+    @antenna_advisor.setter
+    def antenna_advisor(self, new_state: bool = False):
+        if not isinstance(new_state, bool):
+            return
+
+        if new_state:
+            self.send_command(b"PGCMD,33,1")
+        else:
+            self.send_command(b"PGCMD,33,0")
+            self.__antenna_change = False
+            self.__antenna_actual = None
+            self.__antenna_last = None
+
+        self.__antenna_advisor = new_state
+
+    @property
+    def antenna(self):
+        """Status of the active antenna.
+
+        The user must enable the antenna advisor of the PA6H chip by issuing a
+        GPS.antenna_avisor(True) command. When the advisor is activated, the PA6H chip continuously
+        transmits a PGTOP message (status of the active antenna) which will be analyzed by the
+        module. The state of the active antenna will then be available in a tuple given by this
+        property and subject to the acknowledgment mechanism.
+
+        The tuple returned is to be interpreted as follows.
+        [0]: A boolean value indicator. True: A change has occurred and has not yet been
+        acknowledged.
+        [1]: An integer value. The actual status of the active antenna.
+        [2]: An integer value. The last status of the active antenna.
+
+        For items [1] and [2].
+        - 1: Antenna shorted.
+        - 2: Internal antenna in use.
+        - 3: External (active) antenna in use.
+
+        The user can query the PA6H chip for the status of the active antenna by issuing a
+        PGTOP,33,3 command. In this particular case, the PA6H chip will only respond once and the
+        result will be accessible via the antenna[1] property. The antenna[0] and antenna[1] values
+        are meaningless in this particular case if the antenna advisor is not enabled.
+
+        If you want continuous monitoring of active antenna status, please enable the antenna
+        advisor with the GPS.antenna_advisor setter.
+
+        Returns:
+            A tuple as follow (bool, int, int) when the antenna advisor is enabled else
+            (False, None, None).
+        """
+        return self.__antenna_change, self.__antenna_actual, self.__antenna_last
+
+    @property
+    def antenna_acknowledge_delay(self):
+        """
+        Change the acknowledgement delay when the argument delay is present. No acknowledgement
+        of the current antenna status change take place at this time.
+
+        Args:
+            delay (int | None): Use it to change the delay before an automatic acknowledgment
+            occurs. Use 0 to "No delay" (i.e. acknowledgement done silently with no delay).
+            A default value of 5 seconds is set at instanciation of the class.
+        """
+        return self.__antenna_ack_delay
+
+    @antenna_acknowledge_delay.setter
+    def antenna_acknowledge_delay(self, delay=None):
+        _new_delay = None
+
+        if delay is not None:
+            try:
+                _new_delay = int(delay)
+            except ValueError:
+                return
+
+            if _new_delay not in {0, 1, 2, 3, 4, 5}:
+                return
+
+            if _new_delay != self.__antenna_ack_delay:
+                # Change delay of acknowledgement.
+                # Delay must be an integer value: 0, 1, 2, 3, 4, 5 seconds. 0 : free run!
+
+                self.__antenna_ack_delay = _new_delay
+
+    def antenna_acknowledge_receipt(self):
+        """
+        The change of state of the antenna is governed by an acknowledgment with a locking mechanism
+        giving the user time to become aware of any change (for example: forgetting to connect the
+        active antenna, untimely disconnection of the micro connector on-board ufl or intermittent
+        problem). The user must acknowledge an antenna status change if they want to be notified of
+        any future problems with the active antenna. Anyway, an automatic acknowledgment is
+        performed after a delay which can be modified by the user.
+
+        This method do an acknowledgement of the change in the antenna status only if the antenna
+        advisor is enabled.
+        """
+        if not self.antenna_advisor:
+            return
+
+        # Acknowledgment
+        # Antenna status. 1: Shorted. 2: Internal in use. 3: Active connected and in use.
+        self.__antenna_last = self.__antenna_actual
+        self.__antenna_actual = self.__antenna_instant_status
+        self.__antenna_change = False
+        self.__antenna_ack = False  # Unlatch.
 
     @property
     def has_fix(self) -> bool:
@@ -679,17 +809,34 @@ class GPS:
 
         return True
 
-    def _parse_pgtop(self, data) -> int:
-        # Added by Pierre Lepage.
-        if data is None or len(data) != 4:
-            return False
+    def _parse_pgtop(self, data) -> None:
+        # data look like '33,x' where x should be 0, 1 or 2.
+        if data is None or len(data) != 4 or data[3] not in {"1", "2", "3"}:
+            return
 
-        # Antenna status. 1: Antenna shorted. 2: Internal antenna. 3: Active (extension) antenna.
-        # User can detect change in antenna status by testing equality between item 0 and item 1 of
-        # tuple. User is responsible to acknowledge change in the antenna status by making
-        # self.antenna[1] same as item 0.
-        self.antenna = (data[3], self.antenna[1])
-        return True
+        self.__antenna_change = self.__antenna_actual != data[3]
+
+        if not self.__antenna_change:
+            return
+
+        self.__antenna_instant_status = data[3]
+
+        # Case of free run (always acknowledge silently).
+        if self.__antenna_ack_delay == 0 or not self.antenna_advisor:
+            # No delay! Ignore the acknowledgment mechanism.
+            self.antenna_acknowledge_receipt()
+            return
+
+        # Case of change in the antenna status with an acknowledgment governed by a timer.
+        # The latching mechanism is implemented through the test on self.__antenna_ack flag.
+        if not self.__antenna_ack:
+            self.__antenna_ack = True  # Latch.
+            self.__antenna_ack_time = time.monotonic()  # Start a timer.
+
+        # Case of an automatic acknowledge. Its occurs after the programmed delay.
+        if time.monotonic() - self.__antenna_ack_time >= self.__antenna_ack_delay:
+            self.antenna_acknowledge_receipt()
+            return
 
 
 class GPS_GtopI2C(GPS):
