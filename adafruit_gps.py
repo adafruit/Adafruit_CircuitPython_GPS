@@ -243,7 +243,7 @@ class GPS:
         self.longitude_minutes = None  # Use for full precision minutes
         """Minutes component of longitude measurement"""
         self.fix_quality = 0
-        """ 
+        """
         GPS quality indicator
 
             |   0 - fix not available
@@ -258,7 +258,7 @@ class GPS:
         """
         self.fix_quality_3d = 0
         """
-        The type of fix for a reading 
+        The type of fix for a reading
 
             |    1 - no fix
             |    2 - 2D fix
@@ -290,7 +290,7 @@ class GPS:
         self.sel_mode = None
         """
         Selection mode
-        
+
             |   'M' - manual
             |   'A' - automatic
         """
