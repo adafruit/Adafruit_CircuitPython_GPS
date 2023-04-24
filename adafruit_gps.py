@@ -229,37 +229,86 @@ class GPS:
         self._uart = uart
         # Initialize null starting values for GPS attributes.
         self.timestamp_utc = None
+        """Timestamp in UTC"""
         self.latitude = None
+        """Degrees latitude"""
         self.latitude_degrees = None
+        """Degrees component of latitude measurement"""
         self.latitude_minutes = None  # Use for full precision minutes
+        """Minutes component of latitude measurement"""
         self.longitude = None
+        """Degrees longitude"""
         self.longitude_degrees = None
+        """Degrees component of longitude measurement"""
         self.longitude_minutes = None  # Use for full precision minutes
+        """Minutes component of longitude measurement"""
         self.fix_quality = 0
+        """ 
+        GPS quality indicator
+
+            |   0 - fix not available
+            |   1 - GPS fix
+            |   2 - Differential GPS fix (values above 2 are 2.3 features)
+            |   3 - PPS fix
+            |   4 - Real Time Kinematic
+            |   5 - Float RTK
+            |   6 - estimated (dead reckoning)
+            |   7 - Manual input mode
+            |   8 - Simulation mode
+        """
         self.fix_quality_3d = 0
+        """
+        The type of fix for a reading 
+
+            |    1 - no fix
+            |    2 - 2D fix
+            |    3 - 3D fix
+        """
         self.satellites = None
+        """The number of satellites in use, 0 - 12"""
         self.satellites_prev = None
+        """The number of satellites in use from the previous data point, 0 - 12"""
         self.horizontal_dilution = None
+        """Horizontal dilution of precision (GGA)"""
         self.altitude_m = None
+        """Antenna altitude relative to mean sea level"""
         self.height_geoid = None
+        """Geoidal separation relative to WGS 84"""
         self.speed_knots = None
+        """Ground speed in knots"""
         self.track_angle_deg = None
+        """Track angle in degrees"""
         self._sats = None  # Temporary holder for information from GSV messages
-        self.sats = None  # Completed information from GSV messages
+        self.sats = None
+        """Information from GSV messages"""
         self.isactivedata = None
-        self.true_track = None
-        self.mag_track = None
+        """Status Valid(A) or Invalid(V)"""
+        self.true_track = None  ### TODO: unused?
+        self.mag_track = None  ### TODO: unused?
         self.sat_prns = None
+        """Satellite pseudorandom noise code"""
         self.sel_mode = None
+        """
+        Selection mode
+        
+            |   'M' - manual
+            |   'A' - automatic
+        """
         self.pdop = None
+        """Dilution of precision"""
         self.hdop = None
+        """Horizontal dilution of precision (GSA)"""
         self.vdop = None
+        """Vertical dilution of precision"""
         self.total_mess_num = None
+        """Number of messages"""
         self.mess_num = None
+        """Message number"""
         self._raw_sentence = None
         self._mode_indicator = None
         self._magnetic_variation = None
         self.debug = debug
+        """Toggles debug mode. When True, prints the incoming data sentence to the console"""
 
     def update(self) -> bool:
         """Check for updated data from the GPS module and process it
@@ -535,15 +584,6 @@ class GPS:
         self.longitude_degrees, self.longitude_minutes = _read_int_degrees(data, 3, "w")
 
         # GPS quality indicator
-        # 0 - fix not available,
-        # 1 - GPS fix,
-        # 2 - Differential GPS fix (values above 2 are 2.3 features)
-        # 3 - PPS fix
-        # 4 - Real Time Kinematic
-        # 5 - Float RTK
-        # 6 - estimated (dead reckoning)
-        # 7 - Manual input mode
-        # 8 - Simulation mode
         self.fix_quality = data[5]
 
         # Number of satellites in use, 0 - 12
