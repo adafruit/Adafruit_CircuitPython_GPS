@@ -283,8 +283,6 @@ class GPS:
         """Information from GSV messages"""
         self.isactivedata = None
         """Status Valid(A) or Invalid(V)"""
-        self.true_track = None  ### TODO: unused?
-        self.mag_track = None  ### TODO: unused?
         self.sat_prns = None
         """Satellite pseudorandom noise code"""
         self.sel_mode = None
