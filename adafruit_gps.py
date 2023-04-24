@@ -225,6 +225,8 @@ class GPS:
     GPS modules to read latitude, longitude, and more.
     """
 
+    # lint warning about too many statements disabled
+    # pylint: disable-msg=R0915
     def __init__(self, uart: UART, debug: bool = False) -> None:
         self._uart = uart
         # Initialize null starting values for GPS attributes.
@@ -700,8 +702,7 @@ class GPS:
                     # been seen for 30 seconds
                     timestamp = time.monotonic()
                     old = []
-                    for i in self.sats:
-                        sat = self.sats[i]
+                    for sat in self.sats.items():
                         if (timestamp - sat[4]) > 30:
                             old.append(i)
                     for i in old:
