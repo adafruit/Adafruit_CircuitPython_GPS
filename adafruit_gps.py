@@ -216,10 +216,7 @@ def _parse_data(sentence_type: int, data: List[str]) -> Optional[List]:
     return params
 
 
-# lint warning about too many attributes disabled
-# pylint: disable-msg=R0902
-
-
+# pylint: disable-msg=too-many-instance-attributes
 class GPS:
     """GPS parsing module.  Can parse simple NMEA data sentences from serial
     GPS modules to read latitude, longitude, and more.
