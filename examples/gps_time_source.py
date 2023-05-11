@@ -38,7 +38,6 @@ def _format_datetime(datetime):
 
 last_print = time.monotonic()
 while True:
-
     gps.update()
     # Every second print out current time from GPS, RTC and time.localtime()
     current = time.monotonic()
