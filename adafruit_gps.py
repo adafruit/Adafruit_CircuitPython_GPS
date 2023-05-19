@@ -699,9 +699,9 @@ class GPS:
                     # been seen for 30 seconds
                     timestamp = time.monotonic()
                     old = []
-                    for sat in self.sats.values():
-                        if (timestamp - sat[4]) > 30:
-                            old.append(i)
+                    for sat_id, sat_data in self.sats.items():
+                        if (timestamp - sat_data[4]) > 30:
+                            old.append(sat_id)
                     for i in old:
                         self.sats.pop(i)
                 for sat in self._sats:
