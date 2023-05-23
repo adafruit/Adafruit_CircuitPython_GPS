@@ -5,9 +5,9 @@
 # Will wait for a fix and print a message every second with the current location
 # and other details.
 import time
+import math
 import board
 import busio
-import math
 
 import adafruit_gps
 
