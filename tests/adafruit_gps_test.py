@@ -15,6 +15,7 @@ from adafruit_gps import _parse_str
 from adafruit_gps import _read_degrees
 from adafruit_gps import _parse_talker
 from adafruit_gps import _parse_data
+from adafruit_gps import _read_deg_mins
 from adafruit_gps import GPS
 
 
@@ -177,6 +178,10 @@ def test_GPS_update_rmc_no_magnetic_variation():
         assert gps.timestamp_utc == exp_time
         assert gps.latitude == pytest.approx(12.57613)
         assert gps.longitude == pytest.approx(1.385391)
+        assert gps.latitude_degrees == 12
+        assert gps.longitude_degrees == 1
+        assert gps.latitude_minutes == 34.5678
+        assert gps.longitude_minutes == 23.12345
         assert gps.fix_quality == 1
         assert gps.fix_quality_3d == 0
         assert gps.speed_knots == 0.45
@@ -324,6 +329,10 @@ def test_GPS_update_from_GLL():
         assert gps.timestamp_utc == exp_time
         assert gps.latitude == pytest.approx(49.27417)
         assert gps.longitude == pytest.approx(-123.1853)
+        assert gps.latitude_degrees == 49
+        assert gps.longitude_degrees == -123
+        assert gps.latitude_minutes == 16.45
+        assert gps.longitude_minutes == 11.12
         assert gps.isactivedata == "A"
         assert gps._mode_indicator == "A"
         assert gps.fix_quality == 0
@@ -335,7 +344,7 @@ def test_GPS_update_from_GLL():
 
 
 def test_GPS_update_from_RMC():
-    r = b"$GNRMC,001031.00,A,4404.13993,N,12118.86023,W,0.146,084.4,100117,,,A*5d\r\n"
+    r = b"$GNRMC,001031.00,A,4404.1399,N,12118.8602,W,0.146,084.4,100117,,,A*5d\r\n"
     # TODO: length 13 and 14 version
     with mock.patch.object(GPS, "readline", return_value=r):
         gps = GPS(uart=UartMock())
@@ -349,6 +358,10 @@ def test_GPS_update_from_RMC():
         assert gps.has_3d_fix is False
         assert gps.latitude == pytest.approx(44.069)
         assert gps.longitude == pytest.approx(-121.3143)
+        assert gps.latitude_degrees == 44
+        assert gps.longitude_degrees == -121
+        assert gps.latitude_minutes == 4.1399
+        assert gps.longitude_minutes == 18.8602
         assert gps.speed_knots == 0.146
         assert gps.track_angle_deg == 84.4
         assert gps._magnetic_variation is None
@@ -364,6 +377,10 @@ def test_GPS_update_from_GGA():
         assert gps.timestamp_utc == exp_time
         assert gps.latitude == pytest.approx(48.1173)
         assert gps.longitude == pytest.approx(11.51667)
+        assert gps.latitude_degrees == 48
+        assert gps.longitude_degrees == 11
+        assert gps.latitude_minutes == 7.038
+        assert gps.longitude_minutes == 31.000
         assert gps.fix_quality == 1
         assert gps.fix_quality_3d == 0
         assert gps.satellites == 8
@@ -467,3 +484,19 @@ def test_GPS_update_from_GSV_both_parts_sats_are_removed():
             assert gps.update()
             assert gps.satellites == 2
             assert set(gps.sats.keys()) == {"GP12", "GP14", "GP13", "GP15"}
+
+
+@pytest.mark.parametrize(
+    ("input_str", "exp", "neg"),
+    (
+        (["3723.2475", "N"], (37, 23.2475), "S"),
+        (["3723.2475", "S"], (-37, 23.2475), "s"),
+        (["00123.1234", "E"], (1, 23.1234), "W"),
+        (["00123", "E"], (1, 23), "W"),
+        (["1234.5678", "E"], (12, 34.5678), "W"),
+        (["3723.2475123", "N"], (37, 23.2475123), "S"),
+        (["3723", "N"], (37, 23), "S"),
+    ),
+)
+def test_read_min_secs(input_str, exp, neg):
+    assert _read_deg_mins(data=input_str, index=0, neg=neg) == exp

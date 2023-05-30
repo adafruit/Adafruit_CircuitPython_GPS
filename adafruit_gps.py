@@ -95,7 +95,7 @@ def _parse_degrees(nmea_data: str) -> int:
     degrees = int(raw[0]) // 100 * 1000000  # the ddd
     minutes = int(raw[0]) % 100  # the mm.
     minutes += int(f"{raw[1][:4]:0<4}") / 10000
-    minutes = int(minutes / 60 * 1000000)
+    minutes = int((minutes * 1000000) / 60)
     return degrees + minutes
 
 
@@ -125,12 +125,22 @@ def _read_degrees(data: List[float], index: int, neg: str) -> float:
     return x
 
 
-def _read_int_degrees(data: List[float], index: int, neg: str) -> Tuple[int, float]:
-    deg = data[index] // 1000000
-    minutes = data[index] % 1000000 / 10000
+def _read_deg_mins(data: List[str], index: int, neg: str) -> Tuple[int, float]:
+    # the degrees come in different formats and vary between latitudes and
+    # longitudes, which makes parsing tricky:
+    # for latitudes: ddmm,mmmm (0 - 7 decimal places, not zero padded)
+    # for longitudes: dddmm,mmmm (0 - 7 decimal places, not zero padded)
+    int_part, _, minutes_decimal = data[index].partition(".")
+    # we need to parse from right to left, minutes can only have 2 digits
+    minutes_int = int_part[-2:]
+    # the rest mus be degrees which are either 2 or 3 digits
+    deg = int(int_part[:-2])
+    # combine the parts of the minutes, this also works when there are no
+    # decimal places specified in the sentence
+    minutes = float(f"{minutes_int}.{minutes_decimal}")
     if data[index + 1].lower() == neg:
         deg *= -1
-    return (deg, minutes)
+    return deg, minutes
 
 
 def _parse_talker(data_type: bytes) -> Tuple[bytes, bytes]:
@@ -490,26 +500,30 @@ class GPS:
 
         if data is None or len(data) != 7:
             return False  # Unexpected number of params.
-        data = _parse_data(_GLL, data)
+        parsed_data = _parse_data(_GLL, data)
         if data is None:
             return False  # Params didn't parse
 
         # Latitude
-        self.latitude = _read_degrees(data, 0, "s")
-        self.latitude_degrees, self.latitude_minutes = _read_int_degrees(data, 0, "s")
+        self.latitude = _read_degrees(parsed_data, 0, "s")
+        self.latitude_degrees, self.latitude_minutes = _read_deg_mins(
+            data=data, index=0, neg="s"
+        )
 
         # Longitude
-        self.longitude = _read_degrees(data, 2, "w")
-        self.longitude_degrees, self.longitude_minutes = _read_int_degrees(data, 2, "w")
+        self.longitude = _read_degrees(parsed_data, 2, "w")
+        self.longitude_degrees, self.longitude_minutes = _read_deg_mins(
+            data=data, index=2, neg="w"
+        )
 
         # UTC time of position
-        self._update_timestamp_utc(data[4])
+        self._update_timestamp_utc(parsed_data[4])
 
         # Status Valid(A) or Invalid(V)
-        self.isactivedata = data[5]
+        self.isactivedata = parsed_data[5]
 
         # Parse FAA mode indicator
-        self._mode_indicator = data[6]
+        self._mode_indicator = parsed_data[6]
 
         return True
 
@@ -518,44 +532,48 @@ class GPS:
 
         if data is None or len(data) not in (12, 13):
             return False  # Unexpected number of params.
-        data = _parse_data({12: _RMC, 13: _RMC_4_1}[len(data)], data)
-        if data is None:
+        parsed_data = _parse_data({12: _RMC, 13: _RMC_4_1}[len(data)], data)
+        if parsed_data is None:
             self.fix_quality = 0
             return False  # Params didn't parse
 
         # UTC time of position and date
-        self._update_timestamp_utc(data[0], data[8])
+        self._update_timestamp_utc(parsed_data[0], parsed_data[8])
 
         # Status Valid(A) or Invalid(V)
-        self.isactivedata = data[1]
-        if data[1].lower() == "a":
+        self.isactivedata = parsed_data[1]
+        if parsed_data[1].lower() == "a":
             if self.fix_quality == 0:
                 self.fix_quality = 1
         else:
             self.fix_quality = 0
 
         # Latitude
-        self.latitude = _read_degrees(data, 2, "s")
-        self.latitude_degrees, self.latitude_minutes = _read_int_degrees(data, 2, "s")
+        self.latitude = _read_degrees(parsed_data, 2, "s")
+        self.latitude_degrees, self.latitude_minutes = _read_deg_mins(
+            data=data, index=2, neg="s"
+        )
 
         # Longitude
-        self.longitude = _read_degrees(data, 4, "w")
-        self.longitude_degrees, self.longitude_minutes = _read_int_degrees(data, 4, "w")
+        self.longitude = _read_degrees(parsed_data, 4, "w")
+        self.longitude_degrees, self.longitude_minutes = _read_deg_mins(
+            data=data, index=4, neg="w"
+        )
 
         # Speed over ground, knots
-        self.speed_knots = data[6]
+        self.speed_knots = parsed_data[6]
 
         # Track made good, degrees true
-        self.track_angle_deg = data[7]
+        self.track_angle_deg = parsed_data[7]
 
         # Magnetic variation
-        if data[9] is None or data[10] is None:
+        if parsed_data[9] is None or parsed_data[10] is None:
             self._magnetic_variation = None
         else:
-            self._magnetic_variation = _read_degrees(data, 9, "w")
+            self._magnetic_variation = _read_degrees(parsed_data, 9, "w")
 
         # Parse FAA mode indicator
-        self._mode_indicator = data[11]
+        self._mode_indicator = parsed_data[11]
 
         return True
 
@@ -564,37 +582,41 @@ class GPS:
 
         if data is None or len(data) != 14:
             return False  # Unexpected number of params.
-        data = _parse_data(_GGA, data)
-        if data is None:
+        parsed_data = _parse_data(_GGA, data)
+        if parsed_data is None:
             self.fix_quality = 0
             return False  # Params didn't parse
 
         # UTC time of position
-        self._update_timestamp_utc(data[0])
+        self._update_timestamp_utc(parsed_data[0])
 
         # Latitude
-        self.latitude = _read_degrees(data, 1, "s")
-        self.latitude_degrees, self.latitude_minutes = _read_int_degrees(data, 1, "s")
+        self.latitude = _read_degrees(parsed_data, 1, "s")
+        self.longitude_degrees, self.longitude_minutes = _read_deg_mins(
+            data=data, index=3, neg="w"
+        )
 
         # Longitude
-        self.longitude = _read_degrees(data, 3, "w")
-        self.longitude_degrees, self.longitude_minutes = _read_int_degrees(data, 3, "w")
+        self.longitude = _read_degrees(parsed_data, 3, "w")
+        self.latitude_degrees, self.latitude_minutes = _read_deg_mins(
+            data=data, index=1, neg="s"
+        )
 
         # GPS quality indicator
-        self.fix_quality = data[5]
+        self.fix_quality = parsed_data[5]
 
         # Number of satellites in use, 0 - 12
-        self.satellites = data[6]
+        self.satellites = parsed_data[6]
 
         # Horizontal dilution of precision
-        self.horizontal_dilution = data[7]
+        self.horizontal_dilution = parsed_data[7]
 
         # Antenna altitude relative to mean sea level
-        self.altitude_m = _parse_float(data[8])
+        self.altitude_m = _parse_float(parsed_data[8])
         # data[9] - antenna altitude unit, always 'M' ???
 
         # Geoidal separation relative to WGS 84
-        self.height_geoid = _parse_float(data[10])
+        self.height_geoid = _parse_float(parsed_data[10])
         # data[11] - geoidal separation unit, always 'M' ???
 
         # data[12] - Age of differential GPS data, can be null
