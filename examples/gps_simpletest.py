@@ -5,7 +5,6 @@
 # Will wait for a fix and print a message every second with the current location
 # and other details.
 import time
-import math
 import board
 import busio
 
@@ -85,13 +84,13 @@ while True:
         print("Latitude: {0:.6f} degrees".format(gps.latitude))
         print("Longitude: {0:.6f} degrees".format(gps.longitude))
         print(
-            "Precise Latitude: {:3.0f} degs, {:2.4f} mins".format(
-                math.floor(gps.latitude_degrees), gps.latitude_minutes
+            "Precise Latitude: {} degs, {:2.4f} mins".format(
+                gps.latitude_degrees, gps.latitude_minutes
             )
         )
         print(
-            "Precise Longitude: {:3.0f} degs, {:2.4f} mins".format(
-                math.floor(gps.longitude_degrees), gps.longitude_minutes
+            "Precise Longitude: {} degs, {:2.4f} mins".format(
+                gps.longitude_degrees, gps.longitude_minutes
             )
         )
         print("Fix quality: {}".format(gps.fix_quality))
