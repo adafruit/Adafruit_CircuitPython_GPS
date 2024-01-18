@@ -133,7 +133,7 @@ def _read_deg_mins(data: List[str], index: int, neg: str) -> Tuple[int, float]:
     int_part, _, minutes_decimal = data[index].partition(".")
     # we need to parse from right to left, minutes can only have 2 digits
     minutes_int = int_part[-2:]
-    # the rest mus be degrees which are either 2 or 3 digits
+    # the rest must be degrees which are either 2 or 3 digits
     deg = int(int_part[:-2])
     # combine the parts of the minutes, this also works when there are no
     # decimal places specified in the sentence
