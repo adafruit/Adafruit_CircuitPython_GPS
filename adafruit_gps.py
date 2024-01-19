@@ -130,7 +130,11 @@ def _read_deg_mins(data: List[str], index: int, neg: str) -> Tuple[int, float]:
     # longitudes, which makes parsing tricky:
     # for latitudes: ddmm,mmmm (0 - 7 decimal places, not zero padded)
     # for longitudes: dddmm,mmmm (0 - 7 decimal places, not zero padded)
-    int_part, _, minutes_decimal = data[index].partition(".")
+    if "." in data[index]:
+        int_part, minutes_decimal = data[index].split(".")
+    else:
+        int_part, minutes_decimal = data[index], 0
+
     # we need to parse from right to left, minutes can only have 2 digits
     minutes_int = int_part[-2:]
     # the rest must be degrees which are either 2 or 3 digits
