@@ -505,7 +505,7 @@ class GPS:
         if data is None or len(data) != 7:
             return False  # Unexpected number of params.
         parsed_data = _parse_data(_GLL, data)
-        if data is None:
+        if parsed_data is None:
             return False  # Params didn't parse
 
         # Latitude
