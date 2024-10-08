@@ -36,6 +36,8 @@ gps = adafruit_gps.GPS(uart, debug=False)  # Use UART/pyserial
 
 # Turn on the basic GGA and RMC info (what you typically want)
 gps.send_command(b"PMTK314,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0")
+# Turn on the basic GGA and RMC info + VTG for speed in km/h
+# gps.send_command(b"PMTK314,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0")
 # Turn on just minimum info (RMC only, location):
 # gps.send_command(b'PMTK314,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0')
 # Turn off everything:
@@ -102,6 +104,8 @@ while True:
             print("Altitude: {} meters".format(gps.altitude_m))
         if gps.speed_knots is not None:
             print("Speed: {} knots".format(gps.speed_knots))
+        if gps.speed_kmh is not None:
+            print("Speed: {} km/h".format(gps.speed_kmh))
         if gps.track_angle_deg is not None:
             print("Track angle: {} degrees".format(gps.track_angle_deg))
         if gps.horizontal_dilution is not None:

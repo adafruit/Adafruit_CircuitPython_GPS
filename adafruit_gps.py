@@ -53,8 +53,9 @@ _GSV11 = 6
 _GSV15 = 7
 _GSV19 = 8
 _RMC_4_1 = 9
+_VTG = 10
 _ST_MIN = _GLL
-_ST_MAX = _RMC_4_1
+_ST_MAX = _VTG
 
 _SENTENCE_PARAMS = (
     # 0 - _GLL
@@ -77,6 +78,8 @@ _SENTENCE_PARAMS = (
     "iiiiiiIiiiIiiiIiiiI",
     # 9 - _RMC_4_1
     "scdcdcffsDCCC",
+    # 10 - _VTG
+    "fcFCfcfcC",
 )
 
 
@@ -202,6 +205,12 @@ def _parse_data(sentence_type: int, data: List[str]) -> Optional[List]:
             elif pti == "f":
                 # A floating point number
                 params.append(_parse_float(dti))
+            elif pti == "F":
+                # A floating point number or Nothing
+                if nothing:
+                    params.append(None)
+                else:
+                    params.append(_parse_float(dti))
             elif pti == "i":
                 # An integer
                 params.append(_parse_int(dti))
@@ -289,6 +298,8 @@ class GPS:
         """Geoidal separation relative to WGS 84"""
         self.speed_knots = None
         """Ground speed in knots"""
+        self.speed_kmh = None
+        """Ground speed in km/h"""
         self.track_angle_deg = None
         """Track angle in degrees"""
         self._sats = None  # Temporary holder for information from GSV messages
@@ -368,6 +379,8 @@ class GPS:
             result = self._parse_gsv(talker, args)
         elif sentence_type == b"GSA":  # GPS DOP and active satellites
             result = self._parse_gsa(talker, args)
+        elif sentence_type == b"VTG":  # Ground speed
+            result = self._parse_vtg(args)
 
         return result
 
@@ -498,6 +511,30 @@ class GPS:
         self.timestamp_utc = time.struct_time(
             (year, month, day, hours, mins, secs, 0, 0, -1)
         )
+
+    def _parse_vtg(self, data: List[str]) -> bool:
+        # VTG - Course Over Ground and Ground Speed
+
+        if data is None or len(data) != 9:
+            return False  # Unexpected number of params
+
+        parsed_data = _parse_data(_VTG, data)
+        if parsed_data is None:
+            return False  # Params didn't parse
+
+        # Track made good, degrees true
+        self.track_angle_deg = parsed_data[0]
+
+        # Speed over ground, knots
+        self.speed_knots = parsed_data[4]
+
+        # Speed over ground, kilometers / hour
+        self.speed_kmh = parsed_data[6]
+
+        # Parse FAA mode indicator
+        self._mode_indicator = parsed_data[8]
+
+        return True
 
     def _parse_gll(self, data: List[str]) -> bool:
         # GLL - Geographic Position - Latitude/Longitude
