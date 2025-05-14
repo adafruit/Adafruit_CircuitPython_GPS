@@ -7,6 +7,7 @@
 # * GSV - Satellites in view
 
 import time
+
 import board
 
 import adafruit_gps

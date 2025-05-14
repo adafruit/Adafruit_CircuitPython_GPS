@@ -14,6 +14,7 @@ import sys
 
 import board
 import busio
+
 import adafruit_gps
 
 # Path to the file to log GPS data.  By default this will be appended to

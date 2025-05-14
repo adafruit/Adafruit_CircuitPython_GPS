@@ -1,22 +1,23 @@
-# pylint: disable=missing-function-docstring,missing-module-docstring,invalid-name,protected-access,no-self-use,missing-class-docstring
-
 # SPDX-FileCopyrightText: 2021 Jonas Kittner
 #
 # SPDX-License-Identifier: MIT
 import time
 from unittest import mock
-from freezegun import freeze_time
-import pytest
 
-from adafruit_gps import _parse_degrees
-from adafruit_gps import _parse_int
-from adafruit_gps import _parse_float
-from adafruit_gps import _parse_str
-from adafruit_gps import _read_degrees
-from adafruit_gps import _parse_talker
-from adafruit_gps import _parse_data
-from adafruit_gps import _read_deg_mins
-from adafruit_gps import GPS
+import pytest
+from freezegun import freeze_time
+
+from adafruit_gps import (
+    GPS,
+    _parse_data,
+    _parse_degrees,
+    _parse_float,
+    _parse_int,
+    _parse_str,
+    _parse_talker,
+    _read_deg_mins,
+    _read_degrees,
+)
 
 
 @pytest.mark.parametrize(
@@ -115,7 +116,7 @@ def test_parse_data_unexpected_parameter_type():
 class UartMock:
     """mocking the UART connection an its methods"""
 
-    def write(self, bytestr):
+    def write(self, bytestr):  # noqa: PLR6301
         print(bytestr, end="")
 
     @property
@@ -202,12 +203,8 @@ def test_GPS_update_rmc_no_magnetic_variation():
 
 
 def test_GPS_update_rmc_fix_is_set():
-    r_valid = (
-        b"$GPRMC,215032.086,A,1234.5678,N,00123.12345,E,0.45,56.35,021021,,,A*6A\r\n"
-    )
-    r_invalid = (
-        b"$GPRMC,215032.086,V,1234.5678,N,00123.12345,E,0.45,56.35,021021,,,A*7D\r\n"
-    )
+    r_valid = b"$GPRMC,215032.086,A,1234.5678,N,00123.12345,E,0.45,56.35,021021,,,A*6A\r\n"
+    r_invalid = b"$GPRMC,215032.086,V,1234.5678,N,00123.12345,E,0.45,56.35,021021,,,A*7D\r\n"
     with mock.patch.object(GPS, "readline", return_value=r_valid):
         gps = GPS(uart=UartMock())
         assert gps.update()
@@ -221,9 +218,7 @@ def test_GPS_update_rmc_fix_is_set():
 
 
 def test_GPS_update_rmc_fix_is_set_new():
-    r_valid = (
-        b"$GPRMC,215032.086,A,1234.5678,N,00123.12345,E,0.45,56.35,021021,,,A*6A\r\n"
-    )
+    r_valid = b"$GPRMC,215032.086,A,1234.5678,N,00123.12345,E,0.45,56.35,021021,,,A*6A\r\n"
     r_invalid = b"$GPRMC,215032.086,V,ABC,N,00123.12345,E,0.45,56.35,021021,,,A*1B\r\n"
     with mock.patch.object(GPS, "readline", return_value=r_valid):
         gps = GPS(uart=UartMock())
@@ -290,11 +285,8 @@ def test_GPS_update_rmc_debug_shows_sentence(capsys):
         gps = GPS(uart=UartMock(), debug=True)
         assert gps.update()
         out, err = capsys.readouterr()
-        assert err == ""
-        assert (
-            out
-            == "('GPRMC', '215032.086,A,1234.5678,N,00123.12345,E,0.45,56.35,021021,,,A')\n"
-        )
+        assert not err
+        assert out == "('GPRMC', '215032.086,A,1234.5678,N,00123.12345,E,0.45,56.35,021021,,,A')\n"
 
 
 def test_GPS_update_data_type_too_short():
@@ -308,7 +300,7 @@ def test_GPS_send_command_with_checksum(capsys):
     gps = GPS(uart=UartMock())
     gps.send_command(command=b"$PMTK001,314,3\r\n", add_checksum=True)
     out, err = capsys.readouterr()
-    assert err == ""
+    assert not err
     assert out == ("b'$'" "b'$PMTK001,314,3\\r\\n'" "b'*'" "b'15'" "b'\\r\\n'")
 
 
@@ -316,7 +308,7 @@ def test_GPS_send_command_without_checksum(capsys):
     gps = GPS(uart=UartMock())
     gps.send_command(command=b"$PMTK001,314,3\r\n", add_checksum=False)
     out, err = capsys.readouterr()
-    assert err == ""
+    assert not err
     assert out == ("b'$'" "b'$PMTK001,314,3\\r\\n'" "b'\\r\\n'")
 
 
@@ -391,21 +383,17 @@ def test_GPS_update_from_GGA():
         assert gps.has_3d_fix is False
         assert gps.datetime == exp_time
         assert (
-            gps._raw_sentence
-            == "$GPGGA,123519,4807.038,N,01131.000,E,1,08,0.9,545.4,M,46.9,M,,*47"
+            gps._raw_sentence == "$GPGGA,123519,4807.038,N,01131.000,E,1,08,0.9,545.4,M,46.9,M,,*47"
         )
         assert (
-            gps.nmea_sentence
-            == "$GPGGA,123519,4807.038,N,01131.000,E,1,08,0.9,545.4,M,46.9,M,,*47"
+            gps.nmea_sentence == "$GPGGA,123519,4807.038,N,01131.000,E,1,08,0.9,545.4,M,46.9,M,,*47"
         )
 
 
 @pytest.mark.parametrize(
     "r",
     (
-        pytest.param(
-            b"$GPGSA,A,3,15,18,14,,,31,,,23,,,,04.5,02.1,04.0*0f\r\n", id="smaller v4.1"
-        ),
+        pytest.param(b"$GPGSA,A,3,15,18,14,,,31,,,23,,,,04.5,02.1,04.0*0f\r\n", id="smaller v4.1"),
         pytest.param(
             b"$GPGSA,A,3,15,18,14,,,31,,,23,,,,04.5,02.1,04.0,3*10\r\n",
             id="greater v4.1",
