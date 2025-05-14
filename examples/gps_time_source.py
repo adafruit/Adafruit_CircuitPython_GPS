@@ -6,9 +6,11 @@
 # time while there is powersource (ie coin cell battery)
 
 import time
+
 import board
 import busio
 import rtc
+
 import adafruit_gps
 
 uart = busio.UART(board.TX, board.RX, baudrate=9600, timeout=10)
@@ -26,14 +28,9 @@ the_rtc = rtc.RTC()
 
 
 def _format_datetime(datetime):
-    return "{:02}/{:02}/{} {:02}:{:02}:{:02}".format(
-        datetime.tm_mon,
-        datetime.tm_mday,
-        datetime.tm_year,
-        datetime.tm_hour,
-        datetime.tm_min,
-        datetime.tm_sec,
-    )
+    date_part = f"{datetime.tm_mon:02}/{datetime.tm_mday:02}/{datetime.tm_year}"
+    time_part = f"{datetime.tm_hour:02}:{datetime.tm_min:02}:{datetime.tm_sec:02}"
+    return f"{date_part} {time_part}"
 
 
 last_print = time.monotonic()
@@ -47,12 +44,12 @@ while True:
             print("No time data from GPS yet")
             continue
         # Time & date from GPS informations
-        print("Fix timestamp: {}".format(_format_datetime(gps.timestamp_utc)))
+        print(f"Fix timestamp: {_format_datetime(gps.timestamp_utc)}")
 
         # Time & date from internal RTC
-        print("RTC timestamp: {}".format(_format_datetime(the_rtc.datetime)))
+        print(f"RTC timestamp: {_format_datetime(the_rtc.datetime)}")
 
         # Time & date from time.localtime() function
         local_time = time.localtime()
 
-        print("Local time: {}".format(_format_datetime(local_time)))
+        print(f"Local time: {_format_datetime(local_time)}")

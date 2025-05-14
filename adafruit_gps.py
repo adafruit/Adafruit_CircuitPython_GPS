@@ -26,14 +26,17 @@ Implementation Notes
   https://github.com/adafruit/circuitpython/releases
 
 """
+
 import time
+
 from micropython import const
 
 try:
-    from typing import Optional, Tuple, List
-    from typing_extensions import Literal
+    from typing import List, Optional, Tuple
+
+    from busio import I2C, UART
     from circuitpython_typing import ReadableBuffer
-    from busio import UART, I2C
+    from typing_extensions import Literal
 except ImportError:
     pass
 
@@ -103,19 +106,19 @@ def _parse_degrees(nmea_data: str) -> int:
 
 
 def _parse_int(nmea_data: str) -> int:
-    if nmea_data is None or nmea_data == "":
+    if nmea_data is None or not nmea_data:
         return None
     return int(nmea_data)
 
 
 def _parse_float(nmea_data: str) -> float:
-    if nmea_data is None or nmea_data == "":
+    if nmea_data is None or not nmea_data:
         return None
     return float(nmea_data)
 
 
 def _parse_str(nmea_data: str) -> str:
-    if nmea_data is None or nmea_data == "":
+    if nmea_data is None or not nmea_data:
         return None
     return str(nmea_data)
 
@@ -162,7 +165,6 @@ def _parse_data(sentence_type: int, data: List[str]) -> Optional[List]:
     """Parse sentence data for the specified sentence type and
     return a list of parameters in the correct format, or return None.
     """
-    # pylint: disable=too-many-branches
 
     if not _ST_MIN <= sentence_type <= _ST_MAX:
         # The sentence_type is unknown
@@ -239,14 +241,11 @@ def _parse_data(sentence_type: int, data: List[str]) -> Optional[List]:
     return params
 
 
-# pylint: disable-msg=too-many-instance-attributes
 class GPS:
     """GPS parsing module.  Can parse simple NMEA data sentences from serial
     GPS modules to read latitude, longitude, and more.
     """
 
-    # lint warning about too many statements disabled
-    # pylint: disable-msg=R0915
     def __init__(self, uart: UART, debug: bool = False) -> None:
         self._uart = uart
         # Initialize null starting values for GPS attributes.
@@ -362,7 +361,7 @@ class GPS:
         # GP - GPS
         # GQ - QZSS
         # GN - GNSS / More than one of the above
-        if talker not in (b"GA", b"GB", b"GI", b"GL", b"GP", b"GQ", b"GN"):
+        if talker not in {b"GA", b"GB", b"GI", b"GL", b"GP", b"GQ", b"GN"}:
             # It's not a known GNSS source of data
             # Assume it's a valid packet anyway
             return True
@@ -397,7 +396,7 @@ class GPS:
             for char in command:
                 checksum ^= char
             self.write(b"*")
-            self.write(bytes("{:02x}".format(checksum).upper(), "ascii"))
+            self.write(bytes(f"{checksum:02x}".upper(), "ascii"))
         self.write(b"\r\n")
 
     @property
@@ -444,7 +443,6 @@ class GPS:
 
     def _read_sentence(self) -> Optional[str]:
         # Parse any NMEA sentence that is available.
-        # pylint: disable=len-as-condition
         # This needs to be refactored when it can be tested.
 
         # Only continue if we have at least 11 bytes in the input buffer
@@ -508,9 +506,7 @@ class GPS:
             month = int(date[2:4])
             year = 2000 + int(date[4:6])
 
-        self.timestamp_utc = time.struct_time(
-            (year, month, day, hours, mins, secs, 0, 0, -1)
-        )
+        self.timestamp_utc = time.struct_time((year, month, day, hours, mins, secs, 0, 0, -1))
 
     def _parse_vtg(self, data: List[str]) -> bool:
         # VTG - Course Over Ground and Ground Speed
@@ -547,15 +543,11 @@ class GPS:
 
         # Latitude
         self.latitude = _read_degrees(parsed_data, 0, "s")
-        self.latitude_degrees, self.latitude_minutes = _read_deg_mins(
-            data=data, index=0, neg="s"
-        )
+        self.latitude_degrees, self.latitude_minutes = _read_deg_mins(data=data, index=0, neg="s")
 
         # Longitude
         self.longitude = _read_degrees(parsed_data, 2, "w")
-        self.longitude_degrees, self.longitude_minutes = _read_deg_mins(
-            data=data, index=2, neg="w"
-        )
+        self.longitude_degrees, self.longitude_minutes = _read_deg_mins(data=data, index=2, neg="w")
 
         # UTC time of position
         self._update_timestamp_utc(parsed_data[4])
@@ -571,7 +563,7 @@ class GPS:
     def _parse_rmc(self, data: List[str]) -> bool:
         # RMC - Recommended Minimum Navigation Information
 
-        if data is None or len(data) not in (12, 13):
+        if data is None or len(data) not in {12, 13}:
             return False  # Unexpected number of params.
         parsed_data = _parse_data({12: _RMC, 13: _RMC_4_1}[len(data)], data)
         if parsed_data is None:
@@ -591,15 +583,11 @@ class GPS:
 
         # Latitude
         self.latitude = _read_degrees(parsed_data, 2, "s")
-        self.latitude_degrees, self.latitude_minutes = _read_deg_mins(
-            data=data, index=2, neg="s"
-        )
+        self.latitude_degrees, self.latitude_minutes = _read_deg_mins(data=data, index=2, neg="s")
 
         # Longitude
         self.longitude = _read_degrees(parsed_data, 4, "w")
-        self.longitude_degrees, self.longitude_minutes = _read_deg_mins(
-            data=data, index=4, neg="w"
-        )
+        self.longitude_degrees, self.longitude_minutes = _read_deg_mins(data=data, index=4, neg="w")
 
         # Speed over ground, knots
         self.speed_knots = parsed_data[6]
@@ -633,15 +621,11 @@ class GPS:
 
         # Latitude
         self.latitude = _read_degrees(parsed_data, 1, "s")
-        self.longitude_degrees, self.longitude_minutes = _read_deg_mins(
-            data=data, index=3, neg="w"
-        )
+        self.longitude_degrees, self.longitude_minutes = _read_deg_mins(data=data, index=3, neg="w")
 
         # Longitude
         self.longitude = _read_degrees(parsed_data, 3, "w")
-        self.latitude_degrees, self.latitude_minutes = _read_deg_mins(
-            data=data, index=1, neg="s"
-        )
+        self.latitude_degrees, self.latitude_minutes = _read_deg_mins(data=data, index=1, neg="s")
 
         # GPS quality indicator
         self.fix_quality = parsed_data[5]
@@ -668,7 +652,7 @@ class GPS:
     def _parse_gsa(self, talker: bytes, data: List[str]) -> bool:
         # GSA - GPS DOP and active satellites
 
-        if data is None or len(data) not in (17, 18):
+        if data is None or len(data) not in {17, 18}:
             return False  # Unexpected number of params.
         if len(data) == 17:
             data = _parse_data(_GSA, data)
@@ -689,7 +673,7 @@ class GPS:
         satlist = list(filter(None, data[2:-4]))
         self.sat_prns = []
         for sat in satlist:
-            self.sat_prns.append("{}{}".format(talker, sat))
+            self.sat_prns.append(f"{talker}{sat}")
 
         # PDOP, dilution of precision
         self.pdop = _parse_float(data[14])
@@ -706,9 +690,8 @@ class GPS:
 
     def _parse_gsv(self, talker: bytes, data: List[str]) -> bool:
         # GSV - Satellites in view
-        # pylint: disable=too-many-branches
 
-        if data is None or len(data) not in (7, 11, 15, 19):
+        if data is None or len(data) not in {7, 11, 15, 19}:
             return False  # Unexpected number of params.
         data = _parse_data(
             {7: _GSV7, 11: _GSV11, 15: _GSV15, 19: _GSV19}[len(data)],
@@ -734,7 +717,7 @@ class GPS:
             j = i * 4
             value = (
                 # Satellite number
-                "{}{}".format(talker, sat_tup[0 + j]),
+                f"{talker}{sat_tup[0 + j]}",
                 # Elevation in degrees
                 sat_tup[1 + j],
                 # Azimuth in degrees
@@ -789,9 +772,7 @@ class GPS_GtopI2C(GPS):
         debug: bool = False,
         timeout: float = 5.0,
     ) -> None:
-        from adafruit_bus_device import (  # pylint: disable=import-outside-toplevel
-            i2c_device,
-        )
+        from adafruit_bus_device import i2c_device  # noqa: PLC0415
 
         super().__init__(None, debug)  # init the parent with no UART
         self._i2c = i2c_device.I2CDevice(i2c_bus, address)
