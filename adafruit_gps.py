@@ -64,7 +64,7 @@ _SENTENCE_PARAMS = (
     # 0 - _GLL
     "dcdcscC",
     # 1 - _RMC
-    "scdcdcffsDCC",
+    "scDCDCFFsDCC",
     # 2 - _GGA
     "sdcdciiffsfsIS",
     # 3 - _GSA
@@ -580,6 +580,7 @@ class GPS:
                 self.fix_quality = 1
         else:
             self.fix_quality = 0
+            return True  # break early since no fix means no following values will be populated
 
         # Latitude
         self.latitude = _read_degrees(parsed_data, 2, "s")

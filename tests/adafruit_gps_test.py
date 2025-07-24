@@ -163,6 +163,18 @@ def test_GPS_update_timestamp_timestamp_utc_was_not_none_new_date_none():
     assert gps.timestamp_utc == exp_struct
 
 
+def test_GPS_update_time_from_RTC_without_fix():
+    r = b"$GPRMC,210648.000,V,,,,,0.71,105.86,050425,,,N*4E\r\n"
+    with mock.patch.object(GPS, "readline", return_value=r):
+        gps = GPS(uart=UartMock())
+        gps.update()
+        exp_time = time.struct_time((2025, 4, 5, 21, 6, 48, 0, 0, -1))
+        assert gps.has_fix is False
+        assert gps.timestamp_utc == exp_time
+        assert gps.datetime == exp_time
+        assert gps.nmea_sentence == "$GPRMC,210648.000,V,,,,,0.71,105.86,050425,,,N*4E"
+
+
 def test_GPS_update_with_unknown_talker():
     r = b"$XYRMC,215032.086,A,1234.5678,N,00123.12345,E,0.45,56.35,021021,,,A*7c\r\n"
     with mock.patch.object(GPS, "readline", return_value=r):
