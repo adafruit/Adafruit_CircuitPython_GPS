@@ -78,7 +78,7 @@ _SENTENCE_PARAMS = (
     # 8 - _GSV19
     "iiiiiiIiiiIiiiIiiiI",
     # 9 - _RMC_4_1
-    "scdcdcffsDCCC",
+    "scDCDCFFsDCCC",
     # 10 - _VTG
     "fcFCfcfcC",
 )
