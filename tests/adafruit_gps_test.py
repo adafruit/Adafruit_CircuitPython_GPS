@@ -184,10 +184,7 @@ def test_GPS_update_time_from_RTC_without_fix_RMC_4_1():
         assert gps.has_fix is False
         assert gps.timestamp_utc == exp_time
         assert gps.datetime == exp_time
-        assert (
-            gps.nmea_sentence == "$GPRMC,210648.000,V,,,,,0.71,105.86,050425,,,A,N*23"
-        )
-
+        assert gps.nmea_sentence == "$GPRMC,210648.000,V,,,,,0.71,105.86,050425,,,A,N*23"
 
 def test_GPS_update_with_unknown_talker():
     r = b"$XYRMC,215032.086,A,1234.5678,N,00123.12345,E,0.45,56.35,021021,,,A*7c\r\n"
