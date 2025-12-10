@@ -14,9 +14,9 @@ import adafruit_gps
 # Create a serial connection for the GPS connection using default speed and
 # a slightly higher timeout (GPS modules typically update once a second).
 # These are the defaults you should use for the GPS FeatherWing.
-# For other boards set RX = GPS module TX, and TX = GPS module RX pins.
-rx = board.RX  # Change to board.GP4 for Raspberry Pi Pico boards
-tx = board.TX  # Change to board.GP5 for Raspberry Pi Pico boards
+# Connect UART rx to GPS module TX, and UART tx to GPS module RX.
+tx = board.TX  # Use board.GP4 or other UART TX on Raspberry Pi Pico boards.
+rx = board.RX  # Use board.GP5 or other UART RX on Raspberry Pi Pico boards.
 uart = busio.UART(tx, rx, baudrate=9600, timeout=10)
 
 # for a computer, use the pyserial library for uart access
