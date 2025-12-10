@@ -17,7 +17,7 @@ import adafruit_gps
 # For other boards set RX = GPS module TX, and TX = GPS module RX pins.
 rx = board.RX  # Change to board.GP4 for Raspberry Pi Pico boards
 tx = board.TX  # Change to board.GP5 for Raspberry Pi Pico boards
-uart = busio.UART(rx, tx, baudrate=9600, timeout=10)
+uart = busio.UART(tx, rx, baudrate=9600, timeout=10)
 
 # for a computer, use the pyserial library for uart access
 # import serial
