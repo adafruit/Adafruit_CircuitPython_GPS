@@ -28,6 +28,7 @@ Implementation Notes
 """
 
 import time
+from datetime import datetime
 
 from micropython import const
 
@@ -412,8 +413,8 @@ class GPS:
         return self.fix_quality_3d is not None and self.fix_quality_3d >= 2
 
     @property
-    def datetime(self) -> Optional[time.struct_time]:
-        """Return struct_time object to feed rtc.set_time_source() function"""
+    def datetime(self) -> Optional[datetime]:
+        """Return datetime object to feed rtc.set_time_source() function"""
         return self.timestamp_utc
 
     @property
@@ -494,19 +495,24 @@ class GPS:
         hours = int(time_utc[0:2])
         mins = int(time_utc[2:4])
         secs = int(time_utc[4:6])
+        milisecs = int(time_utc[7:10]) if len(time_utc) >= 10 and time_utc[7:10].isdigit() else 0
         if date is None:
             if self.timestamp_utc is None:
                 day, month, year = 0, 0, 0
+                return
             else:
-                day = self.timestamp_utc.tm_mday
-                month = self.timestamp_utc.tm_mon
-                year = self.timestamp_utc.tm_year
+                day = self.timestamp_utc.day
+                month = self.timestamp_utc.month
+                year = self.timestamp_utc.year - 2000
         else:
             day = int(date[0:2])
             month = int(date[2:4])
-            year = 2000 + int(date[4:6])
+            year = int(date[4:6])
 
-        self.timestamp_utc = time.struct_time((year, month, day, hours, mins, secs, 0, 0, -1))
+        self.timestamp_utc = datetime.strptime(
+            str("%d/%d/%d %d:%d:%d.%d" % (day, month, year, hours, mins, secs, milisecs)),
+            "%d/%m/%y %H:%M:%S.%f",
+        )
 
     def _parse_vtg(self, data: List[str]) -> bool:
         # VTG - Course Over Ground and Ground Speed
