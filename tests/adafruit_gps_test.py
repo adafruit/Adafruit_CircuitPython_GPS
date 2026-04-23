@@ -301,7 +301,7 @@ def test_GPS_send_command_with_checksum(capsys):
     gps.send_command(command=b"$PMTK001,314,3\r\n", add_checksum=True)
     out, err = capsys.readouterr()
     assert not err
-    assert out == ("b'$'" "b'$PMTK001,314,3\\r\\n'" "b'*'" "b'15'" "b'\\r\\n'")
+    assert out == ("b'$'b'$PMTK001,314,3\\r\\n'b'*'b'15'b'\\r\\n'")
 
 
 def test_GPS_send_command_without_checksum(capsys):
@@ -309,7 +309,7 @@ def test_GPS_send_command_without_checksum(capsys):
     gps.send_command(command=b"$PMTK001,314,3\r\n", add_checksum=False)
     out, err = capsys.readouterr()
     assert not err
-    assert out == ("b'$'" "b'$PMTK001,314,3\\r\\n'" "b'\\r\\n'")
+    assert out == ("b'$'b'$PMTK001,314,3\\r\\n'b'\\r\\n'")
 
 
 def test_GPS_update_from_GLL():
