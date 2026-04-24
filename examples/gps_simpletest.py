@@ -77,13 +77,14 @@ while True:
         # Print out details about the fix like location, date, etc.
         print("=" * 40)  # Print a separator line.
         print(
-            "Fix timestamp: {}/{}/{} {:02}:{:02}:{:02}".format(  # noqa: UP032
-                gps.timestamp_utc.tm_mon,  # Grab parts of the time from the
-                gps.timestamp_utc.tm_mday,  # struct_time object that holds
-                gps.timestamp_utc.tm_year,  # the fix time.  Note you might
-                gps.timestamp_utc.tm_hour,  # not get all data like year, day,
-                gps.timestamp_utc.tm_min,  # month!
-                gps.timestamp_utc.tm_sec,
+            "Fix timestamp: {}/{}/{} {:02}:{:02}:{:02}.{06}".format(  # noqa: UP032
+                gps.timestamp_utc.month,  # Grab parts of the time from the
+                gps.timestamp_utc.day,  # struct_time object that holds
+                gps.timestamp_utc.year,  # the fix time.  Note you might
+                gps.timestamp_utc.hour,  # not get all data like year, day,
+                gps.timestamp_utc.minute,  # month!
+                gps.timestamp_utc.second,
+                gps.timestamp_utc.microsecond,
             )
         )
         print(f"Latitude: {gps.latitude:.6f} degrees")

@@ -66,6 +66,6 @@ while True:
 
         # Update the label.text property to change the text on the display
         display_output_label.text = f"Timestamp (UTC): \
-            \n{t.tm_mday}/{t.tm_mon}/{t.tm_year} {t.tm_hour}:{t.tm_min:02}:{t.tm_sec:02}\
+            \n{t.day}/{t.month}/{t.year} {t.hour}:{t.minute:02}:{t.second:02}\
             \nLat: {gps.latitude:.6f}\
             \nLong: {gps.longitude:.6f}"

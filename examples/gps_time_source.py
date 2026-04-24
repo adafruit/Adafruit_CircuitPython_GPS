@@ -6,6 +6,7 @@
 # time while there is powersource (ie coin cell battery)
 
 import time
+from datetime import datetime
 
 import board
 import busio
@@ -20,7 +21,7 @@ gps = adafruit_gps.GPS(uart, debug=False)
 # gps = adafruit_gps.GPS_GtopI2C(i2c, debug=False)  # Use I2C interface
 
 gps.send_command(b"PMTK314,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0")
-gps.send_command(b"PMTK220,1000")
+gps.send_command(b"PMTK220,100")
 
 print("Set GPS as time source")
 rtc.set_time_source(gps)
@@ -28,8 +29,10 @@ the_rtc = rtc.RTC()
 
 
 def _format_datetime(datetime):
-    date_part = f"{datetime.tm_mon:02}/{datetime.tm_mday:02}/{datetime.tm_year}"
-    time_part = f"{datetime.tm_hour:02}:{datetime.tm_min:02}:{datetime.tm_sec:02}"
+    date_part = f"{datetime.month:02}/{datetime.day:02}/{datetime.year}"
+    time_part = (
+        f"{datetime.hour:02}:{datetime.minute:02}:{datetime.second:02}.{datetime.microsecond:06}"
+    )
     return f"{date_part} {time_part}"
 
 
