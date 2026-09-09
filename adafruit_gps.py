@@ -315,9 +315,14 @@ class GPS:
             |    3 - 3D fix
         """
         self.satellites = None
-        """The number of satellites in use, 0 - 12"""
+        """The number of satellites in use (GGA), 0 - 12"""
         self.satellites_prev = None
         """The number of satellites in use from the previous data point, 0 - 12"""
+        self.satellites_in_view = None
+        """The number of satellites in view (GSV), 0 - 12"""
+        self.satellites_in_view_prev = None
+        """The number of satellites in view from the previous data point, 0 - 12"""
+
         self.horizontal_dilution = None
         """Horizontal dilution of precision (GGA)"""
         self.altitude_m = None
@@ -678,6 +683,9 @@ class GPS:
         # GPS quality indicator
         self.fix_quality = parsed_data[5]
 
+        # Capture previous value
+        self.satellites_prev = self.satellites
+
         # Number of satellites in use, 0 - 12
         self.satellites = parsed_data[6]
 
@@ -754,8 +762,12 @@ class GPS:
         self.total_mess_num = data[0]
         # Message number
         self.mess_num = data[1]
+
+        # Capture previous value
+        self.satellites_in_view_prev = self.satellites_in_view
+
         # Number of satellites in view
-        self.satellites = data[2]
+        self.satellites_in_view = data[2]
 
         sat_tup = data[3:]
 
@@ -784,7 +796,7 @@ class GPS:
 
         if self.mess_num == self.total_mess_num:
             # Last part of GSV message
-            if len(self._sats) == self.satellites:
+            if len(self._sats) == self.satellites_in_view:
                 # Transfer received satellites to self.sats
                 if self.sats is None:
                     self.sats = {}
@@ -801,8 +813,6 @@ class GPS:
                 for sat in self._sats:
                     self.sats[sat[0]] = sat
             self._sats.clear()
-
-        self.satellites_prev = self.satellites
 
         return True
 

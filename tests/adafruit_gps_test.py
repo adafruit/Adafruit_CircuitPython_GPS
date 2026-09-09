@@ -421,7 +421,7 @@ def test_GPS_update_from_GSV_first_part():
         assert gps.update()
         assert gps.total_mess_num == 2
         assert gps.mess_num == 1
-        assert gps.satellites == 8
+        assert gps.satellites_in_view == 8
         # check two satellites, without timestamp, since it is dynamic
         sats = gps._sats
         assert sats[0][:-1] == ("GP1", 40, 83, 46)
@@ -449,7 +449,7 @@ def test_GPS_update_from_GSV_both_parts_sats_are_removed():
             assert gps.update()
             assert gps.total_mess_num == 2
             assert gps.mess_num == 1
-            assert gps.satellites == 4
+            assert gps.satellites_in_view == 4
             # first time we received satellites, so this must be None
             assert gps.sats is None
         # some time has passed so the first two satellites will be too old, but
@@ -460,7 +460,7 @@ def test_GPS_update_from_GSV_both_parts_sats_are_removed():
             assert gps.update()
             assert gps.total_mess_num == 2
             assert gps.mess_num == 2
-            assert gps.satellites == 4
+            assert gps.satellites_in_view == 4
             # we should now have 4 satellites from the two part request
             assert set(gps.sats.keys()) == {"GP1", "GP2", "GP12", "GP14"}
 
@@ -470,7 +470,7 @@ def test_GPS_update_from_GSV_both_parts_sats_are_removed():
             # a third, one part request
             m.return_value = b"$GPGSV,1,1,02,13,07,344,39,15,22,228,45*7a\r\n"
             assert gps.update()
-            assert gps.satellites == 2
+            assert gps.satellites_in_view == 2
             assert set(gps.sats.keys()) == {"GP12", "GP14", "GP13", "GP15"}
 
 
