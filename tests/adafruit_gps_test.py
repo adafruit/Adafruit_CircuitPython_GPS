@@ -393,9 +393,11 @@ def test_GPS_update_from_GGA():
 @pytest.mark.parametrize(
     "r",
     (
-        pytest.param(b"$GPGSA,A,3,15,18,14,,,31,,,23,,,,04.5,02.1,04.0*0f\r\n", id="smaller v4.1"),
         pytest.param(
-            b"$GPGSA,A,3,15,18,14,,,31,,,23,,,,04.5,02.1,04.0,3*10\r\n",
+            b"$GPGSA,A,3,15,18,14,,,31,,,23,,,28,04.5,02.1,04.0*05\r\n", id="smaller v4.1"
+        ),
+        pytest.param(
+            b"$GPGSA,A,3,15,18,14,,,31,,,23,,,28,04.5,02.1,04.0,3*1a\r\n",
             id="greater v4.1",
         ),
     ),
@@ -408,7 +410,7 @@ def test_GPS_update_from_GSA(r):
         assert gps.fix_quality_3d == 3
         # assert gps.has_fix is True  # TODO: shouldn't this be True?
         assert gps.has_3d_fix is True
-        assert gps.sat_prns == ["GP15", "GP18", "GP14", "GP31", "GP23"]
+        assert gps.sat_prns == ["GP15", "GP18", "GP14", "GP31", "GP23", "GP28"]
         assert gps.pdop == 4.5
         assert gps.hdop == 2.1
         assert gps.vdop == 4.0

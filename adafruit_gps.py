@@ -726,7 +726,7 @@ class GPS:
         # Mode: 1 - no fix, 2 - 2D fix, 3 - 3D fix
         self.fix_quality_3d = data[1]
 
-        satlist = list(filter(None, data[2:-4]))
+        satlist = list(filter(None, data[2:14]))
         self.sat_prns = []
         for sat in satlist:
             self.sat_prns.append(f"{talker}{sat}")
