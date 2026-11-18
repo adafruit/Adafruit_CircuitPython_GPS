@@ -163,6 +163,76 @@ def test_GPS_update_timestamp_timestamp_utc_was_not_none_new_date_none():
     assert gps.timestamp_utc == exp_struct
 
 
+def _zda_sentence(fields, talker="GP"):
+    body = f"{talker}ZDA,{fields}".encode("ascii")
+    checksum = 0
+    for byte in body:
+        checksum ^= byte
+    return b"$" + body + f"*{checksum:02X}\r\n".encode("ascii")
+
+
+@pytest.mark.parametrize(
+    ("talker", "zone", "offset"),
+    (("GP", "-05,15", -315), ("GN", "-00,30", -30), ("GL", "+05,45", 345), ("GA", ",", None)),
+)
+def test_GPS_update_from_ZDA(talker, zone, offset):
+    gps = GPS(uart=UartMock())
+    sentence = _zda_sentence(f"201530.00,04,07,1999,{zone}", talker)
+    with mock.patch.object(GPS, "readline", return_value=sentence):
+        assert gps.update()
+    assert gps.datetime[:6] == (1999, 7, 4, 20, 15, 30)
+    assert gps.local_offset_minutes == offset
+    assert not gps.has_fix
+
+
+@pytest.mark.parametrize(
+    "fields",
+    (
+        "201530,04,07,1999,00",
+        "abc,04,07,1999,00,00",
+        "201530,,07,1999,00,00",
+        "201530,04,07,99,00,00",
+        "201530,04,07,1999,00,xx",
+        "256199,04,07,1999,00,00",
+        "201530.2x,04,07,1999,00,00",
+        "201530junk,04,07,1999,00,00",
+        "201530,29,02,1900,00,00",
+        "201530,31,04,2024,00,00",
+        "201530,04,07,0000,00,00",
+        "201530,04,07,1999,99,30",
+        "201530,04,07,1999,-05,60",
+    ),
+)
+def test_GPS_invalid_ZDA_preserves_previous_reading(fields):
+    gps = GPS(uart=UartMock())
+    with mock.patch.object(
+        GPS,
+        "readline",
+        side_effect=(_zda_sentence("235900,31,12,1999,05,30"), _zda_sentence(fields)),
+    ):
+        assert gps.update()
+        assert not gps.update()
+    assert gps.datetime[:6] == (1999, 12, 31, 23, 59, 0)
+    assert gps.local_offset_minutes == 330
+
+
+def test_GPS_ZDA_date_is_used_by_GGA_until_next_RMC():
+    gps = GPS(uart=UartMock())
+    sentences = (
+        _zda_sentence("235960.00,31,12,2016,13,00"),
+        b"$GPGGA,123519,4807.038,N,01131.000,E,1,08,0.9,545.4,M,46.9,M,,*47\r\n",
+        b"$GNRMC,001031.00,A,4404.1399,N,12118.8602,W,0.146,084.4,100117,,,A*5d\r\n",
+    )
+    with mock.patch.object(GPS, "readline", side_effect=sentences):
+        assert gps.update()
+        assert gps.datetime[:6] == (2016, 12, 31, 23, 59, 60)
+        assert gps.update()
+        assert gps.datetime[:6] == (2016, 12, 31, 12, 35, 19)
+        assert gps.update()
+        assert gps.datetime[:6] == (2017, 1, 10, 0, 10, 31)
+    assert gps.local_offset_minutes == 780
+
+
 def test_GPS_update_with_unknown_talker():
     r = b"$XYRMC,215032.086,A,1234.5678,N,00123.12345,E,0.45,56.35,021021,,,A*7c\r\n"
     with mock.patch.object(GPS, "readline", return_value=r):
