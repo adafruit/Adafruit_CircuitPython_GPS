@@ -280,6 +280,8 @@ class GPS:
         # Initialize null starting values for GPS attributes.
         self.timestamp_utc = None
         """Timestamp in UTC"""
+        self.local_offset_minutes = None
+        """Signed local offset from UTC in minutes from ZDA, or None if unavailable."""
         self.latitude = None
         """Degrees latitude"""
         self.latitude_degrees = None
@@ -412,6 +414,8 @@ class GPS:
             result = self._parse_gsv(talker, args)
         elif sentence_type == b"GSA":  # GPS DOP and active satellites
             result = self._parse_gsa(talker, args)
+        elif sentence_type == b"ZDA":  # UTC time, date and local offset
+            result = self._parse_zda(args)
         elif sentence_type == b"VTG":  # Ground speed
             result = self._parse_vtg(args)
 
@@ -560,6 +564,51 @@ class GPS:
             day, month, year = parsed_date
 
         self.timestamp_utc = time.struct_time((year, month, day, hours, mins, secs, 0, 0, -1))
+
+    @staticmethod
+    def _zda_date(day: str, month: str, year: str) -> Optional[Tuple[int, int, int]]:
+        if len(year) != 4 or not (year.isdigit() and month.isdigit() and day.isdigit()):
+            return None
+        year, month, day = int(year), int(month), int(day)
+        if year == 0 or not 1 <= month <= 12:
+            return None
+        last_day = (31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)[month - 1]
+        if month == 2 and year % 4 == 0 and (year % 100 != 0 or year % 400 == 0):
+            last_day = 29
+        if not 1 <= day <= last_day:
+            return None
+        return year, month, day
+
+    def _parse_zda(self, data: List[str]) -> bool:
+        if len(data) != 6:
+            return False
+        utc, day, month, year, zone_hours, zone_minutes = data
+        clock = self._parse_hhmmss(utc)
+        date = self._zda_date(day, month, year)
+        if (
+            date is None
+            or clock is None
+            or (len(utc) > 6 and (utc[6] != "." or not utc[7:].isdigit()))
+        ):
+            return False
+        hour, minute, second = clock
+        if hour > 23 or minute > 59 or second > 60:
+            return False
+        offset = None
+        if zone_hours or zone_minutes:
+            try:
+                hours = abs(int(zone_hours))
+                minutes = int(zone_minutes)
+            except ValueError:
+                return False
+            if hours > 13 or not 0 <= minutes < 60:
+                return False
+            offset = hours * 60 + minutes
+            if zone_hours.startswith("-"):
+                offset = -offset
+        self.timestamp_utc = time.struct_time(date + clock + (0, 0, -1))
+        self.local_offset_minutes = offset
+        return True
 
     def _parse_vtg(self, data: List[str]) -> bool:
         # VTG - Course Over Ground and Ground Speed

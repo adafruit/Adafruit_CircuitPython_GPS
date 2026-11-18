@@ -58,8 +58,8 @@ $TAG[,DATA[,DATA...]]*hh<CR><LF>
       * GLL - Geographic Position - Latitude/Longitude
       * GGA - Global Positioning System Fix Data
       * VTG - Track made good and Ground speed *(not currently parsed)*
-      * ZDA - Time & Date - UTC, day, month, year and local time zone *(not
-        currently parsed)*
+      * ZDA - UTC time and date (``timestamp_utc``) and the local offset
+        from UTC (``local_offset_minutes``)
       * GSA - GPS `DOP
         <https://en.wikipedia.org/wiki/Dilution_of_precision_(navigation)>`_
         and active satellites
