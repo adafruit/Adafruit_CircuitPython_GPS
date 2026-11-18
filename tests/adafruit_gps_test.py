@@ -312,6 +312,21 @@ def test_GPS_send_command_without_checksum(capsys):
     assert out == ("b'$'b'$PMTK001,314,3\\r\\n'b'\\r\\n'")
 
 
+def test_GPS_update_from_VTG_without_mode_indicator():
+    gps = GPS(uart=UartMock())
+    with mock.patch.object(GPS, "readline") as readline:
+        readline.return_value = b"$GPVTG,140.88,T,,M,8.04,N,14.89,K,D*05\r\n"
+        assert gps.update()
+        assert gps._mode_indicator == "D"
+
+        readline.return_value = b"$GPVTG,054.7,T,034.4,M,005.5,N,010.2,K*48\r\n"
+        assert gps.update()
+        assert gps.track_angle_deg == 54.7
+        assert gps.speed_knots == 5.5
+        assert gps.speed_kmh == 10.2
+        assert gps._mode_indicator is None
+
+
 def test_GPS_update_from_GLL():
     r = b"$GPGLL,4916.45,N,12311.12,W,225444,A,A*5c\r\n"
     with mock.patch.object(GPS, "readline", return_value=r):

@@ -564,10 +564,10 @@ class GPS:
     def _parse_vtg(self, data: List[str]) -> bool:
         # VTG - Course Over Ground and Ground Speed
 
-        if data is None or len(data) != 9:
-            return False  # Unexpected number of params
-
-        parsed_data = _parse_data(_VTG, data)
+        if data is None:
+            return False
+        # Older VTG sentences omit the final mode indicator.
+        parsed_data = _parse_data(_VTG, data + [""] if len(data) == 8 else data)
         if parsed_data is None:
             return False  # Params didn't parse
 
